@@ -1,6 +1,6 @@
 #include <utility>
 #include "raylib.h"
-#include "utils/Vec.h"
+#include "utils/vec.h"
 
 // Celestial Body
 
