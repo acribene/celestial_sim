@@ -1,3 +1,5 @@
+#ifndef VEC2
+#define VEC2
 #include <cmath>
 
 // 2 demensional math vector class
@@ -44,3 +46,4 @@ class Vec2
         return std::sqrtl(std::powl(x, 2) + std::powl(y, 2));
     }
 };
+#endif
