@@ -35,3 +35,12 @@ void Body::update(double dt)
     m_velocity += m_velocity * dt;
     m_acceleration.zero();
 }
+
+void Body::draw() const
+{
+}
+
+void Body::applyForce(Vec2 force)
+{
+    m_acceleration += force / m_mass;
+}

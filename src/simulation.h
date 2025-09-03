@@ -16,4 +16,7 @@ class Simulation
     Simulation(const Simulation&& sim) = delete;
 
     void step();
+    void addBody(const Body& body);
+    void render();
+    void reset();
 };
