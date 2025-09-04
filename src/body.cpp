@@ -14,7 +14,7 @@ inline Body &Body::operator=(const Body &rhs)
     m_position = rhs.m_position;
     m_velocity = rhs.m_velocity;
     m_acceleration = rhs.m_acceleration;
-    m_mass = rhs.mass;
+    m_mass = rhs.m_mass;
 
     return *this;
 }
@@ -24,7 +24,7 @@ inline Body &Body::operator=(Body &&rhs) noexcept
     m_position = rhs.m_position;
     m_velocity = rhs.m_velocity;
     m_acceleration = rhs.m_acceleration;
-    m_mass = rhs.mass
+    m_mass = rhs.m_mass;
 
     return *this;
 }
