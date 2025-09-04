@@ -1,6 +1,7 @@
 #include <utility>
 #include "raylib.h"
 #include "utils/vec.h"
+#include "utils/constants.h"
 
 // Celestial Body
 class Simulation;
@@ -13,7 +14,8 @@ class Body {
     Vec2 m_acceleration; // in AU/yr²
     double m_mass; // in Solar Masses (M☉)
     Color m_color;
-
+    double m_radius;
+    
     public:
     
     Body(double mass = 0);

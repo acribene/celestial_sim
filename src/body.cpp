@@ -38,6 +38,18 @@ void Body::update(double dt)
 
 void Body::draw() const
 {
+    // Convert AU to pixels for rendering
+    double screenX = WINDOW_WIDTH / 2.0 + m_position.getX() * SCALE;
+    double screenY = WINDOW_HEIGHT / 2.0 + m_position.getY() * SCALE;
+    double screenRadius = m_radius * SCALE;
+    
+    // Ensure the body is at least 2 pixels visible
+    if (screenRadius < 2.0) {
+        screenRadius = 2.0;
+    }
+    
+    // Draw the celestial body
+    DrawCircle(screenX, screenY, screenRadius, m_color);
 }
 
 void Body::applyForce(Vec2 force)

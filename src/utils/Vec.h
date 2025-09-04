@@ -45,5 +45,15 @@ class Vec2
     inline double mag() {
         return std::sqrtl(std::powl(x, 2) + std::powl(y, 2));
     }
+
+    // Getters
+
+    double getX() const {
+        return x;
+    }
+
+    double getY() const {
+        return y;
+    }
 };
 #endif
