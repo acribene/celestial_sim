@@ -6,9 +6,10 @@
 class Simulation
 {
     std::vector<Body> m_bodies;
-
+    double m_timeScale;
+    
     public:
-    Simulation() = default;
+    Simulation();
     ~Simulation() = default;
 
     // Will not support copying of simulations

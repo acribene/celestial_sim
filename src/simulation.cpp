@@ -1,5 +1,10 @@
 #include "simulation.h"
 
+// Default ctor sets bodies to stl vector default and puts timescale at 1 (real time)
+Simulation::Simulation() : m_bodies(std::vector<Body>()), m_timeScale(1.0)
+{}
+
+// Updates all the forces on all bodies in the simulation.
 void Simulation::step()
 {
     for (Body i : m_bodies)
@@ -13,4 +18,16 @@ void Simulation::step()
 
         }
     }
+}
+
+// Adds body to simulation
+void Simulation::addBody(const Body &body)
+{
+    m_bodies.push_back(body);
+}
+
+// Removes all bodies from current simulation
+void Simulation::reset()
+{
+    m_bodies.clear();
 }
