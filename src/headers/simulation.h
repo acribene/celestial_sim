@@ -2,9 +2,9 @@
 #define SIMULATION_H
 
 #include "body.h"
-#include "utils/vec.h"  
+#include "../utils/vec.h"  
 #include <vector>
-#include "utils/constants.h"
+#include "../utils/constants.h"
 
 class Simulation
 {

@@ -1,4 +1,4 @@
-#include "simulation.h"
+#include "../headers/simulation.h"
 
 // Default ctor sets bodies to stl vector default and puts timescale at 1 (real time)
 Simulation::Simulation() : m_bodies(std::vector<Body>()), m_timeScale(1.0)

@@ -1,7 +1,7 @@
 #include <utility>
 #include "raylib.h"
-#include "utils/vec.h"
-#include "utils/constants.h"
+#include "../utils/Vec.h"
+#include "../utils/constants.h"
 
 // Celestial Body
 class Simulation;

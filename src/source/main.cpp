@@ -1,5 +1,5 @@
 #include "raylib.h"
-#include "simulation.h"
+#include "../headers/simulation.h"
 
 int main() {
     InitWindow(800, 600, "Celestial Simulation");

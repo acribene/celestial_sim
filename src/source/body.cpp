@@ -1,4 +1,4 @@
-#include "body.h"
+#include "../headers/body.h"
 
 Body::Body(double mass) : m_position(Vec2()), m_velocity(Vec2()), m_acceleration(Vec2()), m_mass(mass)
 {}
