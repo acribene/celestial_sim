@@ -1,7 +1,7 @@
 #include "TimeManager.h"
 #include <algorithm>
 
-TimeManager::TimeManager(double fixedDeltaTime) : m_currentTime(clocktype_t::now()), m_accumulator(0), m_timeScale(1),
+TimeManager::TimeManager(years_t fixedDeltaTime) : m_currentTime(clocktype_t::now()), m_accumulator(0), m_timeScale(1),
     m_fixedDeltaTime(fixedDeltaTime), m_maxFrameTime(0.1)
 {}
 
@@ -14,7 +14,7 @@ void TimeManager::update()
 
     // Clamping the frame time so lags don't spiral
     frameTime = std::min(frameTime, m_maxFrameTime);
-    m_accumulator += frameTime;
+    m_accumulator += std::chrono::duration_cast<years_t>(frameTime) * m_timeScale;
 }
 
 seconds_t TimeManager::getFixedDeltaTime() const

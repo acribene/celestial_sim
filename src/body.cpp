@@ -29,10 +29,10 @@ inline Body &Body::operator=(Body &&rhs) noexcept
     return *this;
 }
 
-void Body::update(seconds_t dt)
+void Body::update(years_t dt)
 {
-    m_position += m_position * dt;
-    m_velocity += m_velocity * dt;
+    m_position += m_position * dt.count();
+    m_velocity += m_velocity * dt.count();
     m_acceleration.zero();
 }
 

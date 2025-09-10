@@ -6,13 +6,13 @@
 class TimeManager {
 private:
   timepoint_t m_currentTime; // The current time
-  seconds_t m_accumulator; // Accumulates actual time passed between frames
+  years_t m_accumulator; // Accumulates actual time passed between frames
   double m_timeScale; // The rate at which simulation is running, ie.. 1.0 == real time
-  seconds_t m_fixedDeltaTime; // The rate at which we want our physics updating
+  years_t m_fixedDeltaTime; // The rate at which we want our physics updating
   seconds_t m_maxFrameTime; // Used to clamp our measured frame time in the event of lag
 
 public:
-  TimeManager(double fixedDeltaTime = 1.0/60);
+  TimeManager(years_t fixedStep = years_t(1.0 / 365.25 / 60.0));
   
   void update();
   seconds_t getFixedDeltaTime() const;

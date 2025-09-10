@@ -5,7 +5,7 @@ Simulation::Simulation() : m_bodies(std::vector<Body>()), m_timeScale(1.0)
 {}
 
 // Updates all the forces on all bodies in the simulation.
-void Simulation::update(seconds_t deltaT)
+void Simulation::update(years_t deltaT)
 {
     for (int i = 0; i < m_bodies.size(); ++i)
     {
