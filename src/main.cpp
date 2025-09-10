@@ -5,7 +5,7 @@ int main() {
     InitWindow(800, 600, "Celestial Simulation");
 
     SetTargetFPS(60);
-    Simulation();
+    Simulation sim;
     
     while (!WindowShouldClose()) {
         

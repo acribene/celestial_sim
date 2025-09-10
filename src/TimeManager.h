@@ -1,9 +1,14 @@
 #ifndef TIME_MANAGER_H
 #define TIME_MANAGER_H
+#include <chrono>
+
+using clocktype_t = std::chrono::high_resolution_clock;
+using seconds_t = std::chrono::duration<double>;
+using timepoint_t = std::chrono::time_point<clocktype_t>;
 
 class TimeManager {
 private:
-  double m_currentTime;
+  timepoint_t m_currentTime;
   double m_accumulator;
   double m_timeScale;
   double m_fixedDeltaTime;

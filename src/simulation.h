@@ -1,3 +1,6 @@
+#ifndef SIMULATION_H
+#define SIMULATION_H
+
 #include "body.h"
 #include "utils/vec.h"  
 #include <vector>
@@ -5,6 +8,7 @@
 
 class Simulation
 {
+    private:
     std::vector<Body> m_bodies;
     double m_timeScale;
     
@@ -21,3 +25,5 @@ class Simulation
     void render();
     void reset();
 };
+
+#endif // SIMULATION_H

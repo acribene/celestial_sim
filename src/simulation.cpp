@@ -30,4 +30,5 @@ void Simulation::addBody(const Body &body)
 void Simulation::reset()
 {
     m_bodies.clear();
+    m_timeScale = 1.0;
 }
