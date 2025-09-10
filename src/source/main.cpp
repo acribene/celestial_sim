@@ -2,13 +2,12 @@
 #include "../headers/simulation.h"
 
 int main() {
-    InitWindow(800, 600, "Celestial Simulation");
+    InitWindow(800, 800, "Celestial Simulation");
 
     SetTargetFPS(60);
     Simulation sim;
     
     while (!WindowShouldClose()) {
-        
     }
 
     CloseWindow();
