@@ -29,7 +29,7 @@ inline Body &Body::operator=(Body &&rhs) noexcept
     return *this;
 }
 
-void Body::update(double dt)
+void Body::update(seconds_t dt)
 {
     m_position += m_position * dt;
     m_velocity += m_velocity * dt;

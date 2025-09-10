@@ -25,7 +25,7 @@ class Body {
     Body& operator=(Body&& rhs) noexcept;
     ~Body() = default;
 
-    void update(double dt);
+    void update(seconds_t dt);
     void draw() const;
     void applyForce(Vec2 force);
 };

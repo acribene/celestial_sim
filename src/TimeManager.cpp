@@ -17,6 +17,11 @@ void TimeManager::update()
     m_accumulator += frameTime;
 }
 
+seconds_t TimeManager::getFixedDeltaTime() const
+{
+    return m_fixedDeltaTime;
+}
+
 double TimeManager::getTimeScale() const
 {
     return m_timeScale;

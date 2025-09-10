@@ -20,7 +20,7 @@ class Simulation
     Simulation(const Simulation& sim) = delete;
     Simulation(const Simulation&& sim) = delete;
 
-    void step();
+    void update(seconds_t deltaT);
     void addBody(const Body& body);
     void render();
     void reset();

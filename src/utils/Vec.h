@@ -29,6 +29,16 @@ class Vec2
         return *this;
     }
 
+    Vec2 operator-(const Vec2& rhs) {
+        return Vec2(x - rhs.x, y - rhs.y);
+    }
+
+    Vec2& operator-=(const Vec2& rhs) {
+        x -= rhs.x;
+        y -= rhs.y;
+        return *this;
+    }
+
     Vec2 operator*(double mult) {
         return Vec2(x * mult, y * mult);
     }
@@ -42,17 +52,32 @@ class Vec2
         y = 0;
     }
 
-    inline double mag() {
+    double mag() const {
         return std::sqrtl(std::powl(x, 2) + std::powl(y, 2));
+    }
+    
+    inline double magSqrd() {
+        return x*x + y*y;
+    }
+
+    Vec2 normalized() const {
+        double magnitude = mag();
+        
+        // ensuring our vector isn't way to small
+        if (magnitude < std::numeric_limits<double>::epsilon() * 100) {
+            return Vec2(0, 0);
+        }
+
+        return Vec2(x / magnitude, y / magnitude);
     }
 
     // Getters
 
-    double getX() const {
+    inline double getX() const {
         return x;
     }
 
-    double getY() const {
+    inline double getY() const {
         return y;
     }
 };

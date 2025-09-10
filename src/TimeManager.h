@@ -1,10 +1,7 @@
 #ifndef TIME_MANAGER_H
 #define TIME_MANAGER_H
 #include <chrono>
-
-using clocktype_t = std::chrono::high_resolution_clock;
-using seconds_t = std::chrono::duration<double>;
-using timepoint_t = std::chrono::time_point<clocktype_t>;
+#include "utils/constants.h"
 
 class TimeManager {
 private:
@@ -18,7 +15,7 @@ public:
   TimeManager(double fixedDeltaTime = 1.0/60);
   
   void update();
-  double getFixedDeltaTime() const;
+  seconds_t getFixedDeltaTime() const;
   double getTimeScale() const;
   void setTimeScale(double scale);
   void increaseTimeScale(float factor);
