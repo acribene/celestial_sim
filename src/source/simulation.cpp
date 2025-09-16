@@ -49,8 +49,6 @@ void Simulation::render()
     {
         body.draw();
     }
-
-    // Possibly additional info.
 }
 
 // Removes all bodies from current simulation

@@ -9,12 +9,12 @@ class Simulation;
 class Body {
     friend Simulation;
     private:
+    double m_mass; // in Solar Masses (M☉)
+    double m_radius;
     Vec2 m_position; // in Astronomical Units (AU)
     Vec2 m_velocity; // in AU per Year (AU/yr)
     Vec2 m_acceleration; // in AU/yr²
-    double m_mass; // in Solar Masses (M☉)
     Color m_color;
-    double m_radius;
     
     public:
     

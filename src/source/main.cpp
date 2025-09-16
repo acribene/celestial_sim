@@ -1,15 +1,9 @@
 #include "raylib.h"
-#include "../headers/simulation.h"
+#include "../headers/Application.h"
 
 int main() {
-    InitWindow(800, 800, "Celestial Simulation");
+    Application sim(1200, 800);
+    sim.run();
 
-    SetTargetFPS(60);
-    Simulation sim;
-    
-    while (!WindowShouldClose()) {
-    }
-
-    CloseWindow();
     return 0;
 }

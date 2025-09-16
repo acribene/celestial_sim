@@ -1,7 +1,6 @@
 #include "../headers/body.h"
-#include "body.h"
 
-Body::Body(double mass) : m_position(Vec2()), m_velocity(Vec2()), m_acceleration(Vec2()), m_mass(mass), m_color(WHITE), m_radius(0)
+Body::Body(double mass) : m_mass(mass), m_radius(0), m_position(Vec2()), m_velocity(Vec2()), m_acceleration(Vec2()),  m_color(WHITE)
 {}
 
 Body::Body(double mass, double radius, Vec2 position, Vec2 velocity, Color color) : m_mass(mass), m_radius(radius), m_position(position), m_velocity(velocity), m_color(color)
@@ -48,12 +47,13 @@ void Body::draw() const
     double screenRadius = m_radius * SCALE;
     
     // Ensure the body is at least 2 pixels visible
-    if (screenRadius < 2.0) {
-        screenRadius = 2.0;
+    if (screenRadius < 5.0) {
+        screenRadius = 5.0;
     }
     
     // Draw the celestial body
-    DrawCircle(screenX, screenY, screenRadius, m_color);
+    //DrawCircle(screenX, screenY, screenRadius, m_color);
+    DrawCircle(screenX, screenY, screenRadius, WHITE);
 }
 
 void Body::applyForce(Vec2 force)
