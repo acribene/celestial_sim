@@ -1,9 +1,13 @@
 #include "../headers/body.h"
+#include "body.h"
 
-Body::Body(double mass) : m_position(Vec2()), m_velocity(Vec2()), m_acceleration(Vec2()), m_mass(mass)
+Body::Body(double mass) : m_position(Vec2()), m_velocity(Vec2()), m_acceleration(Vec2()), m_mass(mass), m_color(WHITE), m_radius(0)
 {}
 
-Body::Body(const Body &rhs) : m_position(rhs.m_position), m_velocity(rhs.m_velocity), m_acceleration(rhs.m_acceleration), m_mass(rhs.m_mass) 
+Body::Body(double mass, double radius, Vec2 position, Vec2 velocity, Color color) : m_mass(mass), m_radius(radius), m_position(position), m_velocity(velocity), m_color(color)
+{}
+
+Body::Body(const Body &rhs) : m_position(rhs.m_position), m_velocity(rhs.m_velocity), m_acceleration(rhs.m_acceleration), m_mass(rhs.m_mass)
 {}
 
 Body::Body(Body &&rhs) noexcept : m_position(std::move(rhs.m_position)), m_velocity(std::move(rhs.m_velocity)), m_acceleration(std::move(rhs.m_acceleration)), m_mass(rhs.m_mass) 
@@ -55,4 +59,44 @@ void Body::draw() const
 void Body::applyForce(Vec2 force)
 {
     m_acceleration += force / m_mass;
+}
+
+void Body::setPos(Vec2 pos)
+{
+    m_position = pos;
+}
+
+void Body::setVel(Vec2 vel)
+{
+    m_velocity = vel;
+}
+
+void Body::setAcc(Vec2 acc)
+{
+    m_acceleration = acc;
+}
+
+void Body::setMass(double mass)
+{
+    m_mass = mass;
+}
+
+Vec2 Body::getPos() const
+{
+    return m_position;
+}
+
+Vec2 Body::getVel() const
+{
+    return m_velocity;
+}
+
+Vec2 Body::getAcc() const
+{
+    return m_acceleration;
+}
+
+double Body::getMass() const
+{
+    return m_mass;
 }

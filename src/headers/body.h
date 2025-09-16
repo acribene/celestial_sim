@@ -19,6 +19,7 @@ class Body {
     public:
     
     Body(double mass = 0);
+    Body(double mass, double radius, Vec2 position, Vec2 velocity, Color color);    
     Body(const Body& rhs);
     Body(Body&& rhs) noexcept;
     Body& operator=(const Body& rhs);
@@ -28,4 +29,16 @@ class Body {
     void update(years_t dt);
     void draw() const;
     void applyForce(Vec2 force);
+
+    // Setters
+    void setPos(Vec2 pos);
+    void setVel(Vec2 vel);
+    void setAcc(Vec2 acc);
+    void setMass(double mass);
+
+    // Getters
+    Vec2 getPos() const;
+    Vec2 getVel() const;
+    Vec2 getAcc() const;
+    double getMass() const;
 };
