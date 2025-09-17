@@ -2,7 +2,7 @@
 #include "../headers/Application.h"
 
 int main() {
-    Application sim(1200, 800);
+    Application sim(WINDOW_WIDTH, WINDOW_HEIGHT);
     sim.run();
 
     return 0;

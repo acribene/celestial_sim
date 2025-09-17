@@ -46,9 +46,8 @@ void Body::draw() const
     double screenY = WINDOW_HEIGHT / 2.0 + m_position.getY() * SCALE;
     double screenRadius = m_radius * SCALE;
     
-    // Ensure the body is at least 2 pixels visible
-    if (screenRadius < 5.0) {
-        screenRadius = 5.0;
+    if (screenRadius < 3.0) {
+        screenRadius = 3.0;
     }
     
     // Draw the celestial body

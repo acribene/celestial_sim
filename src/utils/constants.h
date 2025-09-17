@@ -16,7 +16,7 @@ const constexpr double TIME_STEP = (1.0 / (365.25 * 100.0)); // 0.01 days in yea
 
 const int WINDOW_WIDTH = 1200;
 const int WINDOW_HEIGHT = 800;
-const double SCALE = 100.0; // pixels per AU
+const double SCALE = 200.0; // pixels per AU
 
 // types for time
 using clocktype_t = std::chrono::high_resolution_clock;
