@@ -43,7 +43,7 @@ void Application::render()
     // Display information
     DrawText("2D Physics Simulator", 10, 10, 20, WHITE);
     DrawText(TextFormat("Time Scale: %.2f", timeManager.getTimeScale()), 10, 40, 20, WHITE);
-    DrawText(TextFormat("FPS: %.0f", GetFPS()), 10, 70, 20, WHITE);
+    DrawText(TextFormat("FPS: %d", GetFPS()), 10, 70, 20, WHITE);
     DrawText("Controls: Arrow keys to pan, A/Z to zoom, +/- to change time scale", 10, 100, 20, WHITE);
 
     EndDrawing();
