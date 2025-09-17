@@ -24,6 +24,7 @@ class Simulation
     void addBody(const Body& body);
     void render();
     void reset();
+    void generateRandomSystem(int count, bool centralMass = true );
 };
 
 #endif // SIMULATION_H

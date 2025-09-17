@@ -10,13 +10,14 @@ void Application::initialize() {
     SetTargetFPS(60);
     
     // For testing
-    Body sun(1.0, 0.05, Vec2(0, 0), Vec2(0, 0), WHITE);
-    Body earth(0.000003, 0.01, Vec2(1.0, 0), Vec2(0, 2.0 * M_PI), WHITE);
-    Body mars(0.00000032, 0.005, Vec2(1.52, 0), Vec2(0, 5.08), WHITE);
+    // Body sun(1.0, 0.05, Vec2(0, 0), Vec2(0, 0), WHITE);
+    // Body earth(0.000003, 0.01, Vec2(1.0, 0), Vec2(0, 2.0 * M_PI), WHITE);
+    // Body mars(0.00000032, 0.005, Vec2(1.52, 0), Vec2(0, 5.08), WHITE);
     
-    simulation.addBody(sun);
-    simulation.addBody(earth);
-    simulation.addBody(mars);
+    // simulation.addBody(sun);
+    // simulation.addBody(earth);
+    // simulation.addBody(mars);
+    simulation.generateRandomSystem(25);
     
     isRunning = true;
 }
