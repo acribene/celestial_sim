@@ -21,7 +21,7 @@ class Simulation
     Simulation(Simulation&& sim) = delete;
 
     void update(years_t deltaT);
-    void addBody(const Body& body);
+    void addBody(Body body);
     void render();
     void reset();
     void generateRandomSystem(int count, bool centralMass = true );

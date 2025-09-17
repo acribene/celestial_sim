@@ -1,4 +1,5 @@
 #include "../headers/simulation.h"
+#include "raylib.h"
 #include <cmath>
 #include <random>
 
@@ -41,7 +42,7 @@ void Simulation::update(years_t deltaT)
 }
 
 // Adds body to simulation
-void Simulation::addBody(const Body &body)
+void Simulation::addBody(Body body)
 {
     m_bodies.push_back(body);
 }
@@ -86,7 +87,7 @@ void Simulation::generateRandomSystem(int count, bool centralMass)
     std::uniform_real_distribution<> distDist(0.3, 5.0); // Distance from center in AU
     std::uniform_real_distribution<> angleDist(0, 2 * M_PI); // Random angle
     std::uniform_real_distribution<> eccDist(0, 0.2); // Orbital eccentricity
-    std::uniform_real_distribution<> colorDist(0, 255); // Color components
+    //std::uniform_real_distribution<> colorDist(0, 255); // Color components
     
     for (int i = 0; i < count; i++) {
         // Generate random mass (log scale)
@@ -123,15 +124,15 @@ void Simulation::generateRandomSystem(int count, bool centralMass)
         double radius = 0.01 * std::pow(mass * 1e6, 1.0/3.0); // Scale to make visible
         
         // Generate random color
-        Color color = {
-            static_cast<unsigned char>(colorDist(gen)),
-            static_cast<unsigned char>(colorDist(gen)),
-            static_cast<unsigned char>(colorDist(gen)),
-            255
-        };
+        // Color color = {
+        //     static_cast<unsigned char>(colorDist(gen)),
+        //     static_cast<unsigned char>(colorDist(gen)),
+        //     static_cast<unsigned char>(colorDist(gen)),
+        //     255
+        // };
         
         // Create and add the body
-        Body body(mass, radius, position, velocity, color);
+        Body body(mass, radius, position, velocity, WHITE);
         addBody(body);
     }    
 }

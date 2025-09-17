@@ -1,4 +1,5 @@
 #include "../headers/body.h"
+#include "raylib.h"
 
 Body::Body(double mass) : m_mass(mass), m_radius(0), m_position(Vec2()), m_velocity(Vec2()), m_acceleration(Vec2()),  m_color(WHITE)
 {}
@@ -6,10 +7,10 @@ Body::Body(double mass) : m_mass(mass), m_radius(0), m_position(Vec2()), m_veloc
 Body::Body(double mass, double radius, Vec2 position, Vec2 velocity, Color color) : m_mass(mass), m_radius(radius), m_position(position), m_velocity(velocity), m_color(color)
 {}
 
-Body::Body(const Body &rhs) : m_position(rhs.m_position), m_velocity(rhs.m_velocity), m_acceleration(rhs.m_acceleration), m_mass(rhs.m_mass)
+Body::Body(const Body &rhs) : m_position(rhs.m_position), m_velocity(rhs.m_velocity), m_acceleration(rhs.m_acceleration), m_mass(rhs.m_mass), m_color(rhs.m_color), m_radius(rhs.m_radius)
 {}
 
-Body::Body(Body &&rhs) noexcept : m_position(std::move(rhs.m_position)), m_velocity(std::move(rhs.m_velocity)), m_acceleration(std::move(rhs.m_acceleration)), m_mass(rhs.m_mass) 
+Body::Body(Body &&rhs) noexcept : m_position(std::move(rhs.m_position)), m_velocity(std::move(rhs.m_velocity)), m_acceleration(std::move(rhs.m_acceleration)), m_mass(rhs.m_mass),  m_color(rhs.m_color), m_radius(rhs.m_radius)
 {}
 
 inline Body &Body::operator=(const Body &rhs)
@@ -51,8 +52,8 @@ void Body::draw() const
     }
     
     // Draw the celestial body
-    //DrawCircle(screenX, screenY, screenRadius, m_color);
-    DrawCircle(screenX, screenY, screenRadius, WHITE);
+    DrawCircle(screenX, screenY, screenRadius, m_color);
+    //DrawCircle(screenX, screenY, screenRadius, WHITE);
 }
 
 void Body::applyForce(Vec2 force)
