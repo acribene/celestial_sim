@@ -1,6 +1,5 @@
 #include "../headers/Application.h"
 #include "raylib.h"
-#include <iostream>
 
 Application::Application(int width, int height) : isRunning(false), cameraController(width, height), timeManager(TimeManager()), simulation(Simulation()) {
     initialize();
@@ -24,13 +23,11 @@ void Application::initialize() {
 
 void Application::update()
 {
-    int count = 0;
     timeManager.update();
     while(timeManager.shouldUpdatePhysics())
     {
         simulation.update(timeManager.getFixedDeltaTime());
         timeManager.consumePhysicsTime();
-        std::cout << "Update Count: " << count++ << std::endl;
     }
 }
 

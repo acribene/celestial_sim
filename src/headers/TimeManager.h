@@ -12,7 +12,7 @@ private:
   seconds_t m_maxFrameTime; // Used to clamp our measured frame time in the event of lag
 
 public:
-  TimeManager(years_t fixedStep = years_t(1.0 / 365.25 / 60.0));
+  TimeManager(years_t fixedStep = years_t(TIME_STEP));
   
   void update();
   seconds_t getFixedDeltaTime() const;

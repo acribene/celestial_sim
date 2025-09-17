@@ -18,7 +18,7 @@ class Simulation
 
     // Will not support copying of simulations
     Simulation(const Simulation& sim) = delete;
-    Simulation(const Simulation&& sim) = delete;
+    Simulation(Simulation&& sim) = delete;
 
     void update(years_t deltaT);
     void addBody(const Body& body);

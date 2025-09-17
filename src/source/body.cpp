@@ -34,8 +34,8 @@ inline Body &Body::operator=(Body &&rhs) noexcept
 
 void Body::update(years_t dt)
 {
-    m_position += m_position * dt.count();
-    m_velocity += m_velocity * dt.count();
+    m_velocity += m_acceleration * dt.count();
+    m_position += m_velocity * dt.count();
     m_acceleration.zero();
 }
 
