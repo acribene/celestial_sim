@@ -33,11 +33,14 @@ inline Body &Body::operator=(Body &&rhs) noexcept
     return *this;
 }
 
-void Body::update(years_t dt)
-{
+// Leapfrog: velocity half-step (kick)
+void Body::kick(years_t dt) {
     m_velocity += m_acceleration * dt.count();
+}
+
+// Leapfrog: position full-step (drift)
+void Body::drift(years_t dt) {
     m_position += m_velocity * dt.count();
-    m_acceleration.zero();
 }
 
 void Body::draw() const

@@ -10,34 +10,39 @@ Simulation::Simulation() : m_bodies(std::vector<Body>()), m_timeScale(1.0)
 // Updates all the forces on all bodies in the simulation.
 void Simulation::update(years_t deltaT)
 {
-    // Clear accelerations
+    // Leapfrog (kick-drift-kick) integrator
+    years_t half_dt = deltaT / 2.0;
+
+    // 1. Kick: update velocity by half-step using current acceleration
+    for (auto& body : m_bodies) {
+        body.kick(half_dt);
+    }
+
+    // 2. Drift: update position by full-step using new velocity
+    for (auto& body : m_bodies) {
+        body.drift(deltaT);
+    }
+
+    // 3. Recompute all accelerations (clear and apply forces)
     for (auto& body : m_bodies) {
         body.setAcc(Vec2(0, 0));
     }
-    
-    // Calculate gravitational forces between all body pairs
     for (size_t i = 0; i < m_bodies.size(); i++) {
         for (size_t j = i + 1; j < m_bodies.size(); j++) {
             Vec2 r = m_bodies[j].getPos() - m_bodies[i].getPos();
             double dist_squared = r.magSqrd() + SOFTENING;
             double dist = sqrt(dist_squared);
-            
-            // F = G * m1 * m2 / r^2
-            // Since we're using AU-M☉-year units, GC = 4π²
             double force_magnitude = GC * m_bodies[i].getMass() * m_bodies[j].getMass() / dist_squared;
             Vec2 force_direction = r / dist;
             Vec2 force = force_direction * force_magnitude;
-            
-            // Apply equal and opposite forces
             m_bodies[i].applyForce(force);
             m_bodies[j].applyForce(force * -1);
         }
     }
-    
-    // Update positions and velocities
-    years_t dt_years = std::chrono::duration_cast<years_t>(deltaT);
+
+    // 4. Kick: update velocity by another half-step using new acceleration
     for (auto& body : m_bodies) {
-        body.update(dt_years);
+        body.kick(half_dt);
     }
 }
 

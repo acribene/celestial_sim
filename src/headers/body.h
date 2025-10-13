@@ -29,7 +29,9 @@ class Body {
     Body& operator=(Body&& rhs) noexcept;
     ~Body() = default;
 
-    void update(years_t dt);
+    // Leapfrog integration steps
+    void kick(years_t dt); // update velocity by dt using current acceleration
+    void drift(years_t dt); // update position by dt using current velocity
     void draw() const;
     void applyForce(Vec2 force);
 
