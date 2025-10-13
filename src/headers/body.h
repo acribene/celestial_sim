@@ -1,3 +1,6 @@
+#ifndef BODY_H
+#define BODY_H
+
 #include <utility>
 #include "raylib.h"
 #include "../utils/Vec.h"
@@ -42,3 +45,4 @@ class Body {
     Vec2 getAcc() const;
     double getMass() const;
 };
+#endif // BODY_H
