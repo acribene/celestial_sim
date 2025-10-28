@@ -19,7 +19,7 @@ class Vec2
     }
     ~Vec2() = default;
 
-    Vec2 operator+(const Vec2& rhs) {
+    Vec2 operator+(const Vec2& rhs) const {
         return Vec2(x + rhs.x, y + rhs.y);
     }
 
@@ -29,7 +29,7 @@ class Vec2
         return *this;
     }
 
-    Vec2 operator-(const Vec2& rhs) {
+    Vec2 operator-(const Vec2& rhs) const {
         return Vec2(x - rhs.x, y - rhs.y);
     }
 
@@ -39,11 +39,11 @@ class Vec2
         return *this;
     }
 
-    Vec2 operator*(double mult) {
+    Vec2 operator*(double mult) const {
         return Vec2(x * mult, y * mult);
     }
 
-    Vec2  operator/(double div) {
+    Vec2  operator/(double div) const {
         return Vec2(x / div, y / div);
     }
     
