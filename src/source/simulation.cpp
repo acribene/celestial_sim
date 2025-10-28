@@ -4,13 +4,20 @@
 #include <random>
 
 // Default ctor sets bodies to stl vector default and puts timescale at 1 (real time)
-Simulation::Simulation() : m_bodies(std::vector<Body>()), m_timeScale(1.0)
+// Initialize quadtree with theta (default 0.5) and epsilon from constants
+Simulation::Simulation(double theta) 
+    : m_bodies(std::vector<Body>()), 
+      m_timeScale(1.0),
+      m_quadtree(Quadtree(theta, SOFTENING)),
+      m_theta(theta)
 {}
 
-// Updates all the forces on all bodies in the simulation.
+// Updates all the forces on all bodies in the simulation using Barnes-Hut algorithm
 void Simulation::update(years_t deltaT)
 {
-    // Leapfrog (kick-drift-kick) integrator
+    if (m_bodies.empty()) return;
+
+    // Leapfrog (kick-drift-kick) integrator with Barnes-Hut force calculation
     years_t half_dt = deltaT / 2.0;
 
     // 1. Kick: update velocity by half-step using current acceleration
@@ -23,21 +30,25 @@ void Simulation::update(years_t deltaT)
         body.drift(deltaT);
     }
 
-    // 3. Recompute all accelerations (clear and apply forces)
+    // 3. Build Barnes-Hut quadtree and compute accelerations
+    
+    // Create quad containing all bodies
+    Quad boundingQuad = Quad::newContaining(m_bodies);
+    m_quadtree.clear(boundingQuad);
+    
+    // Insert all bodies into quadtree
+    for (const auto& body : m_bodies) {
+        m_quadtree.insert(body.getPos(), body.getMass());
+    }
+    
+    // Propagate mass and center of mass up the tree
+    m_quadtree.propagate();
+    
+    // Calculate accelerations using quadtree
     for (auto& body : m_bodies) {
         body.setAcc(Vec2(0, 0));
-    }
-    for (size_t i = 0; i < m_bodies.size(); i++) {
-        for (size_t j = i + 1; j < m_bodies.size(); j++) {
-            Vec2 r = m_bodies[j].getPos() - m_bodies[i].getPos();
-            double dist_squared = r.magSqrd() + SOFTENING;
-            double dist = sqrt(dist_squared);
-            double force_magnitude = GC * m_bodies[i].getMass() * m_bodies[j].getMass() / dist_squared;
-            Vec2 force_direction = r / dist;
-            Vec2 force = force_direction * force_magnitude;
-            m_bodies[i].applyForce(force);
-            m_bodies[j].applyForce(force * -1);
-        }
+        Vec2 acceleration = m_quadtree.acc(body.getPos());
+        body.setAcc(acceleration);
     }
 
     // 4. Kick: update velocity by another half-step using new acceleration
@@ -66,6 +77,15 @@ void Simulation::reset()
 {
     m_bodies.clear();
     m_timeScale = 1.0;
+}
+
+// Set the theta parameter for Barnes-Hut algorithm
+// Lower values = more accurate but slower (typical range: 0.3 - 1.0)
+void Simulation::setTheta(double theta)
+{
+    m_theta = theta;
+    // Reinitialize quadtree with new theta
+    m_quadtree = Quadtree(m_theta, SOFTENING);
 }
 
 // Generates a "random" system of bodies

@@ -7,7 +7,7 @@ LDFLAGS = -L C:/raylib/w64devkit/x86_64-w64-mingw32/lib -lraylib -lopengl32 -lgd
 TARGET = main
 
 # Sources and objects
-SRC = $(wildcard src/source/*.cpp)
+SRC = $(wildcard src/source/*.cpp) $(wildcard src/utils/*.cpp)
 OBJS = $(SRC:.cpp=.o)
 
 all: $(TARGET).exe

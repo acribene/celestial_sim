@@ -5,15 +5,18 @@
 #include "../utils/vec.h"  
 #include <vector>
 #include "../utils/constants.h"
+#include "../utils/QuadTree.h"
 
 class Simulation
 {
     private:
     std::vector<Body> m_bodies;
     double m_timeScale;
+    Quadtree m_quadtree;
+    double m_theta;
     
     public:
-    Simulation();
+    Simulation(double theta = 1.0);
     ~Simulation() = default;
 
     // Will not support copying of simulations
@@ -25,6 +28,10 @@ class Simulation
     void render();
     void reset();
     void generateRandomSystem(int count, bool centralMass = true );
+    
+    // Theta parameter management
+    void setTheta(double theta);
+    double getTheta() const { return m_theta; }
 };
 
 #endif // SIMULATION_H
