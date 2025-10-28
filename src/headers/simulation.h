@@ -16,7 +16,7 @@ class Simulation
     double m_theta;
     
     public:
-    Simulation(double theta = 1.0);
+    Simulation(double theta = 0.5);
     ~Simulation() = default;
 
     // Will not support copying of simulations

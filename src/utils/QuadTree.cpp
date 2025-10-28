@@ -176,23 +176,22 @@ Vec2 Quadtree::acc(Vec2 pos) const {
 
         // Check if we can treat this node as a single body (leaf or far enough)
         if (n.isLeaf() || n.quad.size * n.quad.size < d_sq * t_sq) {
-            // Calculate gravitational acceleration: a = GM/r^2 * r_hat
-            double denom = (d_sq + e_sq) * std::sqrt(d_sq + e_sq);
-            
-            if (denom > 0) {
-                double forceMag = GC * n.mass / denom;
-                // Clamp to prevent extremely large forces
-                forceMag = std::min(forceMag, 1e10);
-                acceleration += d * forceMag;
+            // Skip if this is the body itself (d_sq very small)
+            if (d_sq > e_sq) {  // Only calculate if not too close
+                double denom = (d_sq + e_sq) * std::sqrt(d_sq + e_sq);
+                
+                if (denom > 0) {
+                    double forceMag = GC * n.mass / denom;
+                    forceMag = std::min(forceMag, 1e10);
+                    acceleration += d * forceMag;
+                }
             }
 
-            // Move to next node
             if (n.next == 0) {
                 break;
             }
             node = n.next;
         } else {
-            // Need to recurse into children
             node = n.children;
         }
     }

@@ -56,7 +56,7 @@ class Vec2
         return std::sqrtl(std::powl(x, 2) + std::powl(y, 2));
     }
     
-    inline double magSqrd() {
+    inline double magSqrd() const {
         return x*x + y*y;
     }
 

@@ -1,7 +1,7 @@
 #include "../headers/TimeManager.h"
 #include <algorithm>
 
-TimeManager::TimeManager(years_t fixedDeltaTime) : m_currentTime(clocktype_t::now()), m_accumulator(0), m_timeScale(1),
+TimeManager::TimeManager(years_t fixedDeltaTime) : m_currentTime(clocktype_t::now()), m_accumulator(0), m_timeScale(.05),
     m_fixedDeltaTime(fixedDeltaTime), m_maxFrameTime(0.25)
 {}
 

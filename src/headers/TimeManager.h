@@ -7,7 +7,7 @@ class TimeManager {
 private:
   timepoint_t m_currentTime; // The current time
   years_t m_accumulator; // Accumulates actual time passed between frames
-  double m_timeScale; // The rate at which simulation is running, ie.. 1.0 == real time
+  double m_timeScale; // The rate at which simulation is running, ie.. 1.0 == 1 earth year per real second
   years_t m_fixedDeltaTime; // The rate at which we want our physics updating
   seconds_t m_maxFrameTime; // Used to clamp our measured frame time in the event of lag
 
