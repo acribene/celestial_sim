@@ -19,6 +19,8 @@ inline Body &Body::operator=(const Body &rhs)
     m_velocity = rhs.m_velocity;
     m_acceleration = rhs.m_acceleration;
     m_mass = rhs.m_mass;
+    m_radius = rhs.m_radius;
+    m_color = rhs.m_color;
 
     return *this;
 }
@@ -29,6 +31,8 @@ inline Body &Body::operator=(Body &&rhs) noexcept
     m_velocity = rhs.m_velocity;
     m_acceleration = rhs.m_acceleration;
     m_mass = rhs.m_mass;
+    m_radius == rhs.m_radius;
+    m_color = rhs.m_color;
 
     return *this;
 }
