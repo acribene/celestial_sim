@@ -23,8 +23,8 @@ class Body {
     
     Body(double mass = 0);
     Body(double mass, double radius, Vec2 position, Vec2 velocity, Color color);    
-    Body(const Body& rhs);
-    Body(Body&& rhs) noexcept;
+    Body(const Body& other);
+    Body(Body&& other) noexcept;
     Body& operator=(const Body& rhs);
     Body& operator=(Body&& rhs) noexcept;
     ~Body() = default;

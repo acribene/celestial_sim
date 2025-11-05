@@ -7,10 +7,10 @@ Body::Body(double mass) : m_mass(mass), m_radius(0), m_position(Vec2()), m_veloc
 Body::Body(double mass, double radius, Vec2 position, Vec2 velocity, Color color) : m_mass(mass), m_radius(radius), m_position(position), m_velocity(velocity), m_color(color)
 {}
 
-Body::Body(const Body &rhs) : m_position(rhs.m_position), m_velocity(rhs.m_velocity), m_acceleration(rhs.m_acceleration), m_mass(rhs.m_mass), m_color(rhs.m_color), m_radius(rhs.m_radius)
+Body::Body(const Body &other) : m_position(other.m_position), m_velocity(other.m_velocity), m_acceleration(other.m_acceleration), m_mass(other.m_mass), m_color(other.m_color), m_radius(other.m_radius)
 {}
 
-Body::Body(Body &&rhs) noexcept : m_position(std::move(rhs.m_position)), m_velocity(std::move(rhs.m_velocity)), m_acceleration(std::move(rhs.m_acceleration)), m_mass(rhs.m_mass),  m_color(rhs.m_color), m_radius(rhs.m_radius)
+Body::Body(Body &&other) noexcept : m_position(std::move(other.m_position)), m_velocity(std::move(other.m_velocity)), m_acceleration(std::move(other.m_acceleration)), m_mass(other.m_mass),  m_color(other.m_color), m_radius(other.m_radius)
 {}
 
 inline Body &Body::operator=(const Body &rhs)
