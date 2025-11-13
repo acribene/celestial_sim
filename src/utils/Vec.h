@@ -5,8 +5,8 @@
 // 2 demensional math vector class
 class Vec2
 {
-    double x;
-    double y;
+    double x {};
+    double y {};
 
     public:
     Vec2() = default;
@@ -79,6 +79,16 @@ class Vec2
 
     inline double getY() const {
         return y;
+    }
+
+    // Setters
+
+    inline void setX(double newX) {
+        x = newX;
+    }
+
+    inline void setY(double newY) {
+        y = newY;
     }
 };
 #endif

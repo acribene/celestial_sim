@@ -54,58 +54,58 @@ std::array<Quad, 4> Quad::subdivide() const {
 
 // Quadtree implementation
 Quadtree::Quadtree(double theta, double epsilon) 
-    : t_sq(theta * theta), e_sq(epsilon * epsilon) {
+    : m_thetasq(theta * theta), m_epsilonsq(epsilon * epsilon) {
 }
 
 void Quadtree::clear(Quad quad) {
-    nodes.clear();
-    parents.clear();
-    nodes.push_back(Node(0, quad));
+    m_nodes.clear();
+    m_parents.clear();
+    m_nodes.push_back(Node(0, quad));
 }
 
 size_t Quadtree::subdivide(size_t node) {
-    parents.push_back(node);
-    size_t children = nodes.size();
-    nodes[node].children = children;
+    m_parents.push_back(node);
+    size_t children = m_nodes.size();
+    m_nodes[node].children = children;
 
     std::array<size_t, 4> nexts = {
         children + 1,
         children + 2,
         children + 3,
-        nodes[node].next
+        m_nodes[node].next
     };
     
-    std::array<Quad, 4> quads = nodes[node].quad.subdivide();
+    std::array<Quad, 4> quads = m_nodes[node].quad.subdivide();
     
     for (size_t i = 0; i < 4; i++) {
-        nodes.push_back(Node(nexts[i], quads[i]));
+        m_nodes.push_back(Node(nexts[i], quads[i]));
     }
 
     return children;
 }
 
 void Quadtree::insert(Vec2 pos, double mass) {
-    size_t node = ROOT;
+    size_t node = m_root;
 
     // Navigate to appropriate leaf
-    while (nodes[node].isBranch()) {
-        size_t quadrant = nodes[node].quad.findQuadrant(pos);
-        node = nodes[node].children + quadrant;
+    while (m_nodes[node].isBranch()) {
+        size_t quadrant = m_nodes[node].quad.findQuadrant(pos);
+        node = m_nodes[node].children + quadrant;
     }
 
     // If leaf is empty, just insert here
-    if (nodes[node].isEmpty()) {
-        nodes[node].pos = pos;
-        nodes[node].mass = mass;
+    if (m_nodes[node].isEmpty()) {
+        m_nodes[node].pos = pos;
+        m_nodes[node].mass = mass;
         return;
     }
 
     // If same position, add mass
-    Vec2 existingPos = nodes[node].pos;
-    double existingMass = nodes[node].mass;
+    Vec2 existingPos = m_nodes[node].pos;
+    double existingMass = m_nodes[node].mass;
     
     if (pos.getX() == existingPos.getX() && pos.getY() == existingPos.getY()) {
-        nodes[node].mass += mass;
+        m_nodes[node].mass += mass;
         return;
     }
 
@@ -113,8 +113,8 @@ void Quadtree::insert(Vec2 pos, double mass) {
     while (true) {
         size_t children = subdivide(node);
 
-        size_t q1 = nodes[node].quad.findQuadrant(existingPos);
-        size_t q2 = nodes[node].quad.findQuadrant(pos);
+        size_t q1 = m_nodes[node].quad.findQuadrant(existingPos);
+        size_t q2 = m_nodes[node].quad.findQuadrant(pos);
 
         if (q1 == q2) {
             // Both go in same quadrant, continue subdividing
@@ -124,38 +124,38 @@ void Quadtree::insert(Vec2 pos, double mass) {
             size_t n1 = children + q1;
             size_t n2 = children + q2;
 
-            nodes[n1].pos = existingPos;
-            nodes[n1].mass = existingMass;
-            nodes[n2].pos = pos;
-            nodes[n2].mass = mass;
+            m_nodes[n1].pos = existingPos;
+            m_nodes[n1].mass = existingMass;
+            m_nodes[n2].pos = pos;
+            m_nodes[n2].mass = mass;
             return;
         }
     }
 }
 
 void Quadtree::propagate() {
-    // Iterate through parents in reverse order (bottom-up)
-    for (auto it = parents.rbegin(); it != parents.rend(); ++it) {
+    // Iterate through m_parents in reverse order (bottom-up)
+    for (auto it = m_parents.rbegin(); it != m_parents.rend(); ++it) {
         size_t node = *it;
-        size_t i = nodes[node].children;
+        size_t i = m_nodes[node].children;
 
         // Calculate total mass
-        nodes[node].mass = nodes[i].mass 
-                         + nodes[i + 1].mass 
-                         + nodes[i + 2].mass 
-                         + nodes[i + 3].mass;
+        m_nodes[node].mass = m_nodes[i].mass 
+                         + m_nodes[i + 1].mass 
+                         + m_nodes[i + 2].mass 
+                         + m_nodes[i + 3].mass;
 
         // Calculate weighted center of mass
-        if (nodes[node].mass > 0) {
-            nodes[node].pos = Vec2(
-                (nodes[i].pos.getX() * nodes[i].mass +
-                 nodes[i + 1].pos.getX() * nodes[i + 1].mass +
-                 nodes[i + 2].pos.getX() * nodes[i + 2].mass +
-                 nodes[i + 3].pos.getX() * nodes[i + 3].mass) / nodes[node].mass,
-                (nodes[i].pos.getY() * nodes[i].mass +
-                 nodes[i + 1].pos.getY() * nodes[i + 1].mass +
-                 nodes[i + 2].pos.getY() * nodes[i + 2].mass +
-                 nodes[i + 3].pos.getY() * nodes[i + 3].mass) / nodes[node].mass
+        if (m_nodes[node].mass > 0) {
+            m_nodes[node].pos = Vec2(
+                (m_nodes[i].pos.getX() * m_nodes[i].mass +
+                 m_nodes[i + 1].pos.getX() * m_nodes[i + 1].mass +
+                 m_nodes[i + 2].pos.getX() * m_nodes[i + 2].mass +
+                 m_nodes[i + 3].pos.getX() * m_nodes[i + 3].mass) / m_nodes[node].mass,
+                (m_nodes[i].pos.getY() * m_nodes[i].mass +
+                 m_nodes[i + 1].pos.getY() * m_nodes[i + 1].mass +
+                 m_nodes[i + 2].pos.getY() * m_nodes[i + 2].mass +
+                 m_nodes[i + 3].pos.getY() * m_nodes[i + 3].mass) / m_nodes[node].mass
             );
         }
     }
@@ -164,9 +164,9 @@ void Quadtree::propagate() {
 Vec2 Quadtree::acc(Vec2 pos) const {
     Vec2 acceleration(0, 0);
 
-    size_t node = ROOT;
+    size_t node = m_root;
     while (true) {
-        const Node& n = nodes[node];
+        const Node& n = m_nodes[node];
 
         Vec2 d = Vec2(
             n.pos.getX() - pos.getX(),
@@ -175,10 +175,10 @@ Vec2 Quadtree::acc(Vec2 pos) const {
         double d_sq = d.magSqrd();
 
         // Check if we can treat this node as a single body (leaf or far enough)
-        if (n.isLeaf() || n.quad.size * n.quad.size < d_sq * t_sq) {
+        if (n.isLeaf() || n.quad.size * n.quad.size < d_sq * m_thetasq) {
             // Skip if this is the body itself (d_sq very small)
-            if (d_sq > e_sq) {  // Only calculate if not too close
-                double denom = (d_sq + e_sq) * std::sqrt(d_sq + e_sq);
+            if (d_sq > m_epsilonsq) {  // Only calculate if not too close
+                double denom = (d_sq + m_epsilonsq) * std::sqrt(d_sq + m_epsilonsq);
                 
                 if (denom > 0) {
                     double forceMag = GC * n.mass / denom;

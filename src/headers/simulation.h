@@ -10,10 +10,10 @@
 class Simulation
 {
     private:
-    std::vector<Body> m_bodies;
-    double m_timeScale;
-    Quadtree m_quadtree;
-    double m_theta;
+    std::vector<Body> m_bodies;      // Collection of all celestial bodies in the simulation
+    double m_timeScale;              // Time scaling factor for simulation speed
+    Quadtree m_quadtree;             // Barnes-Hut quadtree for efficient force calculations
+    double m_theta;                  // Barnes-Hut approximation parameter (lower = more accurate)
     
     public:
     Simulation(double theta = 0.5);
@@ -28,7 +28,11 @@ class Simulation
     void render();
     void reset();
     void generateRandomSystem(int count, bool centralMass = true );
-    
+
+    //  TODO: Saving and loading simulation state.
+    void saveState(const std::string& filename);
+    void loadState(const std::string& filename);
+
     // Theta parameter management
     void setTheta(double theta);
     double getTheta() const { return m_theta; }

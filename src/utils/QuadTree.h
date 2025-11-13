@@ -52,12 +52,12 @@ struct Node {
 // Barnes-Hut Quadtree for efficient force calculation
 class Quadtree {
 private:
-    double t_sq;    // Theta squared (accuracy parameter)
-    double e_sq;    // Epsilon squared (softening parameter)
-    std::vector<Node> nodes;
-    std::vector<size_t> parents;
+    double m_thetasq;    // Theta squared (accuracy parameter)
+    double m_epsilonsq;    // Epsilon squared (softening parameter)
+    std::vector<Node> m_nodes;
+    std::vector<size_t> m_parents;
 
-    static constexpr size_t ROOT = 0;
+    static constexpr size_t m_root = 0;
 
     // Subdivide a node into 4 children
     size_t subdivide(size_t node);

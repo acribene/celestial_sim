@@ -33,8 +33,13 @@ class Body {
     void kick(years_t dt); // update velocity by dt using current acceleration
     void drift(years_t dt); // update position by dt using current velocity
     void draw() const;
-    void applyForce(Vec2 force);
+    void drawTrail() const; // TODO: Implement trail drawing. May or may not be const.
+    void applyForce(Vec2 force); // TODO: Might not be needed.
 
+    //  TODO: Saving and loading body state.
+    void saveState(FILE* file) const;
+    void loadState(FILE* file);
+    
     // Setters
     void setPos(Vec2 pos);
     void setVel(Vec2 vel);
