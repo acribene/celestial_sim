@@ -22,5 +22,9 @@ public:
   void decreaseTimeScale(float factor);
   bool shouldUpdatePhysics() const;
   void consumePhysicsTime();
+
+  // TODO: Implement if needed
+  void resetAccumulator(); 
+  void haltTime();
 };
 #endif // TIME_MANAGER_H
