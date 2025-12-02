@@ -10,10 +10,10 @@
 class Application
 {
     private:
-    bool isRunning;
-    CameraController cameraController;
-    TimeManager timeManager;
-    Simulation simulation;
+    bool isRunning_;
+    CameraController cameraController_;
+    TimeManager timeManager_;
+    Simulation simulation_;
 
     void initialize();
     void update();

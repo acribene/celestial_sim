@@ -1,7 +1,7 @@
 #include "../headers/Application.h"
 #include "raylib.h"
 
-Application::Application(int width, int height) : isRunning(false), cameraController(width, height), timeManager(TimeManager()), simulation(Simulation()) {
+Application::Application(int width, int height) : isRunning_(false), cameraController_(width, height), timeManager_(TimeManager()), simulation_(Simulation()) {
     initialize();
 }
 
@@ -17,18 +17,18 @@ void Application::initialize() {
     // simulation.addBody(sun);
     // simulation.addBody(earth);
     // simulation.addBody(mars);
-    simulation.generateRandomSystem(30);
+    simulation_.generateRandomSystem(30);
     
-    isRunning = true;
+    isRunning_ = true;
 }
 
 void Application::update()
 {
-    timeManager.update();
-    while(timeManager.shouldUpdatePhysics())
+    timeManager_.update();
+    while(timeManager_.shouldUpdatePhysics())
     {
-        simulation.update(timeManager.getFixedDeltaTime());
-        timeManager.consumePhysicsTime();
+        simulation_.update(timeManager_.getFixedDeltaTime());
+        timeManager_.consumePhysicsTime();
     }
 }
 
@@ -37,13 +37,13 @@ void Application::render()
     BeginDrawing();
     ClearBackground(BLACK);
     
-    BeginMode2D(cameraController.getCamera());
-    simulation.render();
+    BeginMode2D(cameraController_.getCamera());
+    simulation_.render();
     EndMode2D();
 
     // Display information
     DrawText("2D Physics Simulator", 10, 10, 20, WHITE);
-    DrawText(TextFormat("Time Scale: %.2f", timeManager.getTimeScale()), 10, 40, 20, WHITE);
+    DrawText(TextFormat("Time Scale: %.2f", timeManager_.getTimeScale()), 10, 40, 20, WHITE);
     DrawText(TextFormat("FPS: %d", GetFPS()), 10, 70, 20, WHITE);
     DrawText("Controls: Arrow keys to pan, A/Z to zoom, +/- to change time scale", 10, 100, 20, WHITE);
 
@@ -57,13 +57,13 @@ void Application::shutdown()
 
 void Application::processInput()
 {
-    InputHandler::handleTimeScaleInput(timeManager);
-    InputHandler::handleCameraInput(cameraController);
+    InputHandler::handleTimeScaleInput(timeManager_);
+    InputHandler::handleCameraInput(cameraController_);
 }
 
 void Application::run()
 {
-    while (isRunning && !WindowShouldClose())
+    while (isRunning_ && !WindowShouldClose())
     {
         processInput();
         update();

@@ -2,6 +2,7 @@
 #define BODY_H
 
 #include <utility>
+#include <fstream>
 #include "raylib.h"
 #include "../utils/Vec.h"
 #include "../utils/constants.h"
@@ -23,10 +24,10 @@ class Body {
     
     Body(double mass = 0);
     Body(double mass, double radius, Vec2 position, Vec2 velocity, Color color);    
-    Body(const Body& other);
-    Body(Body&& other) noexcept;
-    Body& operator=(const Body& rhs);
-    Body& operator=(Body&& rhs) noexcept;
+    Body(const Body& other) = default;
+    Body(Body&& other) noexcept = default;
+    Body& operator=(const Body& rhs) = default;
+    Body& operator=(Body&& rhs) noexcept = default;
     ~Body() = default;
 
     // Leapfrog integration steps
@@ -37,8 +38,8 @@ class Body {
     void applyForce(Vec2 force); // TODO: Might not be needed.
 
     //  TODO: Saving and loading body state.
-    void saveState(FILE* file) const;
-    void loadState(FILE* file);
+    void saveState(std::ofstream& file) const;
+    void loadState(std::ifstream& file);
     
     // Setters
     void setPos(Vec2 pos);
