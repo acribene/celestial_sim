@@ -88,7 +88,7 @@ void Simulation::setTheta(double theta)
     m_quadtree = Quadtree(m_theta, SOFTENING);
 }
 
-// Generates a "random" system of bodies
+// Generates a "random" system of bodies simulating a protoplanetary disk
 void Simulation::generateRandomSystem(int count, bool centralMass)
 {
     // Clear existing bodies
@@ -100,61 +100,68 @@ void Simulation::generateRandomSystem(int count, bool centralMass)
     
     if (centralMass && count > 0) {
         // Add a central star (like our Sun)
-        Body star(1.0, 0.05, Vec2(0, 0), Vec2(0, 0), YELLOW);
+        double starMass = 1.0;
+        // Visual size for central star (0.06 AU * 150 scale = 9 pixels)
+        double starRadius = 0.06; // Fixed visual size for central star
+        Body star(starMass, starRadius, Vec2(0, 0), Vec2(0, 0), YELLOW);
         addBody(star);
         count--;
     }
     
     if (count <= 0) return;
     
-    // Distributions for random properties
-    std::uniform_real_distribution<> massDist(-7, -3); // Log scale: 10^-7 to 10^-3 solar masses
-    std::uniform_real_distribution<> distDist(0.3, 5.0); // Distance from center in AU
-    std::uniform_real_distribution<> angleDist(0, 2 * M_PI); // Random angle
-    std::uniform_real_distribution<> eccDist(0, 0.2); // Orbital eccentricity
-    //std::uniform_real_distribution<> colorDist(0, 255); // Color components
+    // Distributions for protoplanetary disk properties
+    std::uniform_real_distribution<> massDist(-8, -4); // Log scale: 10^-8 to 10^-4 solar masses (planetesimal range)
+    std::uniform_real_distribution<> radiusDist(0, 1.0); // For surface density sampling
+    std::uniform_real_distribution<> angleDist(0, 2 * M_PI); // Random angle around disk
+    std::uniform_real_distribution<> eccDist(0, 0.05); // Low eccentricity (circular orbits)
+    std::normal_distribution<> inclinationDist(0, 0.01); // Small vertical displacement (flattened disk)
     
     for (int i = 0; i < count; i++) {
         // Generate random mass (log scale)
         double mass = std::pow(10, massDist(gen));
         
-        // Generate random distance from center with more probability for inner orbits
-        double distance = distDist(gen);
-        if (i < count / 2) {
-            // First half of bodies are more likely to be closer
-            distance *= 0.5;
-        }
+        // Generate distance using surface density profile (∝ r^-1.5)
+        // Use inverse transform sampling for r^-1.5 distribution
+        double r_min = 0.5;  // Inner edge of disk in AU
+        double r_max = 8.0;  // Outer edge of disk in AU
+        double u = radiusDist(gen);
+        double distance = std::pow(
+            std::pow(r_min, -0.5) + u * (std::pow(r_max, -0.5) - std::pow(r_min, -0.5)),
+            -2.0
+        );
         
-        // Random angle
+        // Random angle for position in disk
         double angle = angleDist(gen);
         
-        // Calculate position
-        Vec2 position(std::cos(angle) * distance, std::sin(angle) * distance);
+        // Add small vertical displacement for disk thickness (Gaussian distribution)
+        double z_displacement = inclinationDist(gen) * distance; // Scale with distance
         
-        // Calculate velocity for stable orbit with some randomness
-        double centralMass = centralMass ? 1.0 : (i > 0 ? m_bodies[0].getMass() : 1.0);
-        double circularVelocity = std::sqrt(GC * centralMass / distance);
+        // Calculate position (mostly in plane with small z-component)
+        Vec2 position(
+            std::cos(angle) * distance,
+            std::sin(angle) * distance + z_displacement
+        );
         
-        // Add some eccentricity
+        // Calculate velocity for stable circular orbit
+        double centralMassValue = centralMass ? 1.0 : (i > 0 ? m_bodies[0].getMass() : 1.0);
+        double circularVelocity = std::sqrt(GC * centralMassValue / distance);
+        
+        // Add small eccentricity
         double eccentricity = eccDist(gen);
-        double velocityMag = circularVelocity * (1.0 - eccentricity);
+        double velocityMag = circularVelocity * (1.0 + eccentricity);
         
-        // Velocity is perpendicular to position vector with some random direction
+        // Velocity is perpendicular to radial direction (prograde orbit only)
         Vec2 velocityDir(-std::sin(angle), std::cos(angle));
-        if (gen() % 2 == 0) velocityDir = velocityDir * -1; // Random direction
-        
         Vec2 velocity = velocityDir * velocityMag;
         
-        // Calculate reasonable radius for rendering (proportional to mass^(1/3))
-        double radius = 0.01 * std::pow(mass * 1e6, 1.0/3.0); // Scale to make visible
-        
-        // Generate random color
-        // Color color = {
-        //     static_cast<unsigned char>(colorDist(gen)),
-        //     static_cast<unsigned char>(colorDist(gen)),
-        //     static_cast<unsigned char>(colorDist(gen)),
-        //     255
-        // };
+        // Logarithmic radius scaling for visual representation
+        // Dramatic size variation to clearly show mass differences
+        // For mass 10^-8: log10(10^-8) = -8, scaled radius = 0.02 AU (3 pixels)
+        // For mass 10^-4: log10(10^-4) = -4, scaled radius = 0.04 AU (6 pixels)
+        // This creates a 2x visible size range with clear mass differences
+        double log_mass = std::log10(mass);
+        double radius = 0.02 + 0.005 * (log_mass + 8.0); // Scales from 0.02 to 0.04 AU
         
         // Create and add the body
         Body body(mass, radius, position, velocity, WHITE);
