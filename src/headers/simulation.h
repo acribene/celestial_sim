@@ -16,7 +16,7 @@ class Simulation
     Quadtree m_quadtree;             // Barnes-Hut quadtree for efficient force calculations
     double m_theta;                  // Barnes-Hut approximation parameter (lower = more accurate)
     size_t m_threadCount;            // Number of threads for parallelization
-    ThreadPool m_threadPool;         // Thread pool for parallel acceleration calculations
+    ThreadPool m_threadPool;         // Thread pool for parallel calculations
 
     public:
     Simulation(double theta = 0.5);
