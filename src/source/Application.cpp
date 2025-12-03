@@ -17,7 +17,7 @@ void Application::initialize() {
     // simulation.addBody(sun);
     // simulation.addBody(earth);
     // simulation.addBody(mars);
-    simulation_.generateRandomSystem(30);
+    simulation_.generateRandomSystem(200);
     
     isRunning_ = true;
 }

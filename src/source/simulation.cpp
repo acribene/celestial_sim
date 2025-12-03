@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include <cmath>
 #include <random>
+#include <thread>
 
 // Default ctor sets bodies to stl vector default and puts timescale at 1 (real time)
 // Initialize quadtree with theta (default 0.5) and epsilon from constants
@@ -9,8 +10,11 @@ Simulation::Simulation(double theta)
     : m_bodies(std::vector<Body>()), 
       m_timeScale(1.0),
       m_quadtree(Quadtree(theta, SOFTENING)),
-      m_theta(theta)
-{}
+      m_theta(theta),
+      m_threadCount(std::thread::hardware_concurrency() > 0 ? std::thread::hardware_concurrency() : 4),
+      m_threadPool(m_threadCount)
+{
+}
 
 // Updates all the forces on all bodies in the simulation using Barnes-Hut algorithm
 void Simulation::update(years_t deltaT)
@@ -44,12 +48,26 @@ void Simulation::update(years_t deltaT)
     // Propagate mass and center of mass up the tree
     m_quadtree.propagate();
     
-    // Calculate accelerations using quadtree
-    for (auto& body : m_bodies) {
-        body.setAcc(Vec2(0, 0));
-        Vec2 acceleration = m_quadtree.acc(body.getPos());
-        body.setAcc(acceleration);
+    // Calculate accelerations using quadtree with thread pool
+    size_t bodiesPerThread = (m_bodies.size() + m_threadCount - 1) / m_threadCount;
+    
+    for (size_t t = 0; t < m_threadCount; ++t) {
+        size_t start = t * bodiesPerThread;
+        size_t end = std::min(start + bodiesPerThread, m_bodies.size());
+        
+        if (start >= m_bodies.size()) break;
+        
+        m_threadPool.enqueue([this, start, end]() {
+            for (size_t i = start; i < end; ++i) {
+                m_bodies[i].setAcc(Vec2(0, 0));
+                Vec2 acceleration = m_quadtree.acc(m_bodies[i].getPos());
+                m_bodies[i].setAcc(acceleration);
+            }
+        });
     }
+    
+    // Wait for all tasks to complete
+    m_threadPool.wait();
 
     // 4. Kick: update velocity by another half-step using new acceleration
     for (auto& body : m_bodies) {
