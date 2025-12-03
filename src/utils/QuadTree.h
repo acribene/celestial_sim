@@ -7,6 +7,7 @@
 #include <limits>
 #include "constants.h"
 #include "Vec.h"
+#include "raylib.h"
 
 // Forward declaration
 class Body;
@@ -76,6 +77,9 @@ public:
 
     // Calculate acceleration at a position
     Vec2 acc(Vec2 pos) const;
+
+    // Render the quadtree (for debugging)
+    void render() const;
 };
 
 #endif // QUADTREE_H

@@ -198,3 +198,28 @@ Vec2 Quadtree::acc(Vec2 pos) const {
 
     return acceleration;
 }
+
+// Renders the quadtree wireframe.
+void Quadtree::render() const
+{
+    for (const auto& node : m_nodes) {
+        if( !node.isEmpty() ) {
+            // Convert from world space (AU) to screen space (pixels)
+            // Same transformation as Body::draw()
+            float screenX = WINDOW_WIDTH / 2.0f + static_cast<float>(node.quad.center.getX() * SCALE);
+            float screenY = WINDOW_HEIGHT / 2.0f + static_cast<float>(node.quad.center.getY() * SCALE);
+            float screenSize = static_cast<float>(node.quad.size * SCALE);
+            
+            DrawRectangleLinesEx(
+                Rectangle{
+                    screenX - screenSize / 2.0f,
+                    screenY - screenSize / 2.0f,
+                    screenSize,
+                    screenSize
+                },
+                2.0f,
+                RED
+            );
+        }
+    }
+}

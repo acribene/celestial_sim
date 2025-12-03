@@ -88,6 +88,7 @@ void Simulation::render()
     {
         body.draw();
     }
+    m_quadtree.render();
 }
 
 // Removes all bodies from current simulation
