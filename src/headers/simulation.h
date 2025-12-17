@@ -32,7 +32,7 @@ class Simulation
     void addBody(Body body);
     void render();
     void reset();
-    void generateRandomSystem(int count, bool centralMass = true );
+    void generateProPlanetaryDisk(int count, Vec2 centerPoint = Vec2(0, 0), Vec2 velocity = Vec2(0, 0), bool centralMass = true);
 
     //  TODO: Saving and loading simulation state.
     void saveState(const std::string& filename);

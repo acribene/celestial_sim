@@ -84,11 +84,11 @@ void Simulation::addBody(Body body)
 void Simulation::render()
 {
     // Renders bodies
-    for (Body &body : m_bodies)
+    for (const Body &body : m_bodies)
     {
         body.draw();
     }
-    m_quadtree.render();
+    // m_quadtree.render(); / / Uncomment to visualize quadtree -- Will eventually be a toggle option
 }
 
 // Removes all bodies from current simulation
@@ -107,12 +107,9 @@ void Simulation::setTheta(double theta)
     m_quadtree = Quadtree(m_theta, SOFTENING);
 }
 
-// Generates a "random" system of bodies simulating a protoplanetary disk
-void Simulation::generateRandomSystem(int count, bool centralMass)
+// Generates a protoplanetary disk of bodies around a central point
+void Simulation::generateProPlanetaryDisk(int count, Vec2 centerPoint, Vec2 velocity, bool centralMass)
 {
-    // Clear existing bodies
-    reset();
-    
     // Random number generation setup
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -122,7 +119,7 @@ void Simulation::generateRandomSystem(int count, bool centralMass)
         double starMass = 1.0;
         // Visual size for central star (0.06 AU * 150 scale = 9 pixels)
         double starRadius = 0.06; // Fixed visual size for central star
-        Body star(starMass, starRadius, Vec2(0, 0), Vec2(0, 0), YELLOW);
+        Body star(starMass, starRadius, centerPoint, velocity, YELLOW);
         addBody(star);
         count--;
     }
@@ -157,9 +154,10 @@ void Simulation::generateRandomSystem(int count, bool centralMass)
         double z_displacement = inclinationDist(gen) * distance; // Scale with distance
         
         // Calculate position (mostly in plane with small z-component)
+        // Position relative to centerPoint
         Vec2 position(
-            std::cos(angle) * distance,
-            std::sin(angle) * distance + z_displacement
+            centerPoint.getX() + std::cos(angle) * distance,
+            centerPoint.getY() + std::sin(angle) * distance + z_displacement
         );
         
         // Calculate velocity for stable circular orbit
@@ -182,8 +180,7 @@ void Simulation::generateRandomSystem(int count, bool centralMass)
         double log_mass = std::log10(mass);
         double radius = 0.02 + 0.005 * (log_mass + 8.0); // Scales from 0.02 to 0.04 AU
         
-        // Create and add the body
-        Body body(mass, radius, position, velocity, WHITE);
-        addBody(body);
+        // Add the body
+        addBody(Body(mass, radius, position, velocity, WHITE));
     }    
 }

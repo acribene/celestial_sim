@@ -9,7 +9,6 @@
 #include "Vec.h"
 #include "raylib.h"
 
-// Forward declaration
 class Body;
 
 // Represents a quadrant in 2D space
