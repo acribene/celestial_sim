@@ -38,6 +38,7 @@ void Simulation::update(years_t deltaT)
     
     // Create quad containing all bodies
     Quad boundingQuad = Quad::newContaining(m_bodies);
+    m_quadtree.reserve(m_bodies.size());
     m_quadtree.clear(boundingQuad);
     
     // Insert all bodies into quadtree

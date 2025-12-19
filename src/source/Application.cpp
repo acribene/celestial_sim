@@ -17,8 +17,8 @@ void Application::initialize() {
     // simulation.addBody(sun);
     // simulation.addBody(earth);
     // simulation.addBody(mars);
-    simulation_.generateProPlanetaryDisk(50, Vec2(-5, 0), Vec2(0, 1.49), true);  // Left disk moving up
-    simulation_.generateProPlanetaryDisk(50, Vec2(5, 0), Vec2(0, -1.49), true);  // Right disk moving down
+    simulation_.generateProPlanetaryDisk(200, Vec2(-10, 0), Vec2(0, 1.49), true);  // Left disk moving up
+    simulation_.generateProPlanetaryDisk(200, Vec2(10, 0), Vec2(0, -1.49), true);  // Right disk moving down
     
     isRunning_ = true;
 }

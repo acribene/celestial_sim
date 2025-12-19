@@ -22,9 +22,9 @@ Quad Quad::newContaining(const std::vector<Body>& bodies) {
 
     Vec2 center((min_x + max_x) * 0.5, (min_y + max_y) * 0.5);
     double size = std::max(max_x - min_x, max_y - min_y);
-    
-    // Add some padding to ensure all bodies fit comfortably
-    size *= 1.1;
+
+    // Add some padding and clamp to a minimum so degenerate cases do not spin subdivides
+    size = std::max(size * 1.1, 1e-6);
 
     return Quad(center, size);
 }
@@ -55,6 +55,18 @@ std::array<Quad, 4> Quad::subdivide() const {
 // Quadtree implementation
 Quadtree::Quadtree(double theta, double epsilon) 
     : m_thetasq(theta * theta), m_epsilonsq(epsilon * epsilon) {
+}
+
+void Quadtree::reserve(size_t bodyCount) {
+    // Barnes-Hut produces up to ~4n nodes; reserve to limit per-frame allocations
+    size_t expectedNodes = bodyCount > 0 ? bodyCount * 4 + 1 : 0;
+    if (expectedNodes > m_nodes.capacity()) {
+        m_nodes.reserve(expectedNodes);
+    }
+
+    if (bodyCount > m_parents.capacity()) {
+        m_parents.reserve(bodyCount);
+    }
 }
 
 void Quadtree::clear(Quad quad) {
@@ -167,6 +179,14 @@ Vec2 Quadtree::acc(Vec2 pos) const {
     size_t node = m_root;
     while (true) {
         const Node& n = m_nodes[node];
+
+        if (n.mass == 0.0) {
+            if (n.next == 0) {
+                break;
+            }
+            node = n.next;
+            continue;
+        }
 
         Vec2 d = Vec2(
             n.pos.getX() - pos.getX(),

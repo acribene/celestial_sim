@@ -68,6 +68,9 @@ public:
     // Clear the tree and set root quad
     void clear(Quad quad);
 
+    // Reserve space to reduce allocations before inserting bodies
+    void reserve(size_t bodyCount);
+
     // Insert a body into the tree
     void insert(Vec2 pos, double mass);
 
