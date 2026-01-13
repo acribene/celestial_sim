@@ -17,3 +17,4 @@ A few reasons for choosing this project:
 
 This will be primarily for major changes or alterations with my original plan.
 
+- I decided to move away fro the 3D aspect and lean heavier onto simulating large numbers of bodies instead of simply 100.
