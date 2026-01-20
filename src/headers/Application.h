@@ -10,10 +10,10 @@
 class Application
 {
     private:
-    bool isRunning_;
-    CameraController cameraController_;
-    TimeManager timeManager_;
-    Simulation simulation_;
+    bool isRunning_; // Main application loop flag
+    CameraController cameraController_; // Manages camera movement and zoom
+    TimeManager timeManager_; // Manages discrepencies between simulation and real time
+    Simulation simulation_; // The main simulation instance
 
     void initialize();
     void update();
@@ -29,8 +29,10 @@ class Application
     // Wont support copying of Applications
     Application(const Application& app) = delete;
     Application(Application&& app) = delete;
+    Application& operator=(const Application& rhs) = delete;
+    Application& operator=(Application&& rhs) = delete;
 
-    void run();
+    void run(); // Main application loop
 };
 
 #endif // APPLICATION_H

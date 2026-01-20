@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include <cmath>
 #include <random>
+#include <thread>
 
 // Default ctor sets bodies to stl vector default and puts timescale at 1 (real time)
 // Initialize quadtree with theta (default 0.5) and epsilon from constants
@@ -9,8 +10,11 @@ Simulation::Simulation(double theta)
     : m_bodies(std::vector<Body>()), 
       m_timeScale(1.0),
       m_quadtree(Quadtree(theta, SOFTENING)),
-      m_theta(theta)
-{}
+      m_theta(theta),
+      m_threadCount(std::thread::hardware_concurrency() > 0 ? std::thread::hardware_concurrency() : 4),
+      m_threadPool(m_threadCount)
+{
+}
 
 // Updates all the forces on all bodies in the simulation using Barnes-Hut algorithm
 void Simulation::update(years_t deltaT)
@@ -34,6 +38,7 @@ void Simulation::update(years_t deltaT)
     
     // Create quad containing all bodies
     Quad boundingQuad = Quad::newContaining(m_bodies);
+    m_quadtree.reserve(m_bodies.size());
     m_quadtree.clear(boundingQuad);
     
     // Insert all bodies into quadtree
@@ -44,12 +49,26 @@ void Simulation::update(years_t deltaT)
     // Propagate mass and center of mass up the tree
     m_quadtree.propagate();
     
-    // Calculate accelerations using quadtree
-    for (auto& body : m_bodies) {
-        body.setAcc(Vec2(0, 0));
-        Vec2 acceleration = m_quadtree.acc(body.getPos());
-        body.setAcc(acceleration);
+    // Calculate accelerations using quadtree with thread pool
+    size_t bodiesPerThread = (m_bodies.size() + m_threadCount - 1) / m_threadCount;
+    
+    for (size_t t = 0; t < m_threadCount; ++t) {
+        size_t start = t * bodiesPerThread;
+        size_t end = std::min(start + bodiesPerThread, m_bodies.size());
+        
+        if (start >= m_bodies.size()) break;
+        
+        m_threadPool.enqueue([this, start, end]() {
+            for (size_t i = start; i < end; ++i) {
+                m_bodies[i].setAcc(Vec2(0, 0));
+                Vec2 acceleration = m_quadtree.acc(m_bodies[i].getPos());
+                m_bodies[i].setAcc(acceleration);
+            }
+        });
     }
+    
+    // Wait for all tasks to complete
+    m_threadPool.wait();
 
     // 4. Kick: update velocity by another half-step using new acceleration
     for (auto& body : m_bodies) {
@@ -66,10 +85,11 @@ void Simulation::addBody(Body body)
 void Simulation::render()
 {
     // Renders bodies
-    for (Body &body : m_bodies)
+    for (const Body &body : m_bodies)
     {
         body.draw();
     }
+    m_quadtree.render(); // Uncomment to visualize quadtree -- Will eventually be a toggle option
 }
 
 // Removes all bodies from current simulation
@@ -88,12 +108,9 @@ void Simulation::setTheta(double theta)
     m_quadtree = Quadtree(m_theta, SOFTENING);
 }
 
-// Generates a "random" system of bodies simulating a protoplanetary disk
-void Simulation::generateRandomSystem(int count, bool centralMass)
+// Generates a protoplanetary disk of bodies around a central point
+void Simulation::generateProPlanetaryDisk(int count, Vec2 centerPoint, Vec2 velocity, bool centralMass)
 {
-    // Clear existing bodies
-    reset();
-    
     // Random number generation setup
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -103,7 +120,7 @@ void Simulation::generateRandomSystem(int count, bool centralMass)
         double starMass = 1.0;
         // Visual size for central star (0.06 AU * 150 scale = 9 pixels)
         double starRadius = 0.06; // Fixed visual size for central star
-        Body star(starMass, starRadius, Vec2(0, 0), Vec2(0, 0), YELLOW);
+        Body star(starMass, starRadius, centerPoint, velocity, YELLOW);
         addBody(star);
         count--;
     }
@@ -138,9 +155,10 @@ void Simulation::generateRandomSystem(int count, bool centralMass)
         double z_displacement = inclinationDist(gen) * distance; // Scale with distance
         
         // Calculate position (mostly in plane with small z-component)
+        // Position relative to centerPoint
         Vec2 position(
-            std::cos(angle) * distance,
-            std::sin(angle) * distance + z_displacement
+            centerPoint.getX() + std::cos(angle) * distance,
+            centerPoint.getY() + std::sin(angle) * distance + z_displacement
         );
         
         // Calculate velocity for stable circular orbit
@@ -163,8 +181,7 @@ void Simulation::generateRandomSystem(int count, bool centralMass)
         double log_mass = std::log10(mass);
         double radius = 0.02 + 0.005 * (log_mass + 8.0); // Scales from 0.02 to 0.04 AU
         
-        // Create and add the body
-        Body body(mass, radius, position, velocity, WHITE);
-        addBody(body);
+        // Add the body
+        addBody(Body(mass, radius, position, velocity, WHITE));
     }    
 }

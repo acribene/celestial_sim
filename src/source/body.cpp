@@ -33,6 +33,8 @@ void Body::draw() const
     //DrawCircle(screenX, screenY, screenRadius, WHITE);
 }
 
+// Generic setters and getters
+
 void Body::applyForce(Vec2 force)
 {
     m_acceleration += force / m_mass;

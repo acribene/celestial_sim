@@ -6,6 +6,7 @@
 #include <vector>
 #include "../utils/constants.h"
 #include "../utils/QuadTree.h"
+#include "ThreadPool.h"
 
 class Simulation
 {
@@ -14,7 +15,9 @@ class Simulation
     double m_timeScale;              // Time scaling factor for simulation speed
     Quadtree m_quadtree;             // Barnes-Hut quadtree for efficient force calculations
     double m_theta;                  // Barnes-Hut approximation parameter (lower = more accurate)
-    
+    size_t m_threadCount;            // Number of threads for parallelization
+    ThreadPool m_threadPool;         // Thread pool for parallel calculations
+
     public:
     Simulation(double theta = 0.5);
     ~Simulation() = default;
@@ -29,7 +32,7 @@ class Simulation
     void addBody(Body body);
     void render();
     void reset();
-    void generateRandomSystem(int count, bool centralMass = true );
+    void generateProPlanetaryDisk(int count, Vec2 centerPoint = Vec2(0, 0), Vec2 velocity = Vec2(0, 0), bool centralMass = true);
 
     //  TODO: Saving and loading simulation state.
     void saveState(const std::string& filename);

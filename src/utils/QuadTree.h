@@ -7,8 +7,8 @@
 #include <limits>
 #include "constants.h"
 #include "Vec.h"
+#include "raylib.h"
 
-// Forward declaration
 class Body;
 
 // Represents a quadrant in 2D space
@@ -68,6 +68,9 @@ public:
     // Clear the tree and set root quad
     void clear(Quad quad);
 
+    // Reserve space to reduce allocations before inserting bodies
+    void reserve(size_t bodyCount);
+
     // Insert a body into the tree
     void insert(Vec2 pos, double mass);
 
@@ -76,6 +79,9 @@ public:
 
     // Calculate acceleration at a position
     Vec2 acc(Vec2 pos) const;
+
+    // Render the quadtree (for debugging)
+    void render() const;
 };
 
 #endif // QUADTREE_H

@@ -14,12 +14,9 @@ void TimeManager::update()
 
     // Clamping the frame time so lags don't spiral
     frameTime = std::min(frameTime, m_maxFrameTime);
-    //m_accumulator += std::chrono::duration_cast<years_t>(frameTime) * m_timeScale;
-    // Convert real-world frame time to simulation time
-    // frameTime is in seconds, we need to scale it by timeScale
-    // timeScale of 365.25 means 1 real second = 1 simulation year
-    double simulationYearsElapsed = frameTime.count() * m_timeScale / 31557600.0;
-    m_accumulator += years_t(simulationYearsElapsed * 31557600.0);
+    // Convert real-world frame time to simulation time.
+    // timeScale is measured in simulation years per real second.
+    m_accumulator += years_t(frameTime.count() * m_timeScale);
 }
 
 seconds_t TimeManager::getFixedDeltaTime() const
