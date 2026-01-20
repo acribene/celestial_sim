@@ -4,9 +4,12 @@
 #include "../headers/TimeManager.h"
 #include <raylib.h>
 
-void InputHandler::handleTimeScaleInput(TimeManager& timeManager) {
-    if (IsKeyPressed(KEY_EQUAL)) timeManager.increaseTimeScale(1.5f);
-    if (IsKeyPressed(KEY_MINUS)) timeManager.decreaseTimeScale(1.5f);
+void InputHandler::handleTimeScaleInput(TimeManager& time_manager) {
+    if (IsKeyPressed(KEY_SPACE)) {
+        time_manager.togglePause();
+    }
+    if (IsKeyPressed(KEY_EQUAL)) time_manager.increaseTimeScale(1.5f);
+    if (IsKeyPressed(KEY_MINUS)) time_manager.decreaseTimeScale(1.5f);
 }
 
 void InputHandler::handleCameraInput(CameraController& cameraController) {

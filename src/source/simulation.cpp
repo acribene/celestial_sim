@@ -89,7 +89,7 @@ void Simulation::render()
     {
         body.draw();
     }
-    m_quadtree.render(); // Uncomment to visualize quadtree -- Will eventually be a toggle option
+    //m_quadtree.render(); // Uncomment to visualize quadtree -- Will eventually be a toggle option
 }
 
 // Removes all bodies from current simulation
