@@ -62,3 +62,15 @@ void TimeManager::togglePause()
 {
     m_isPaused = !m_isPaused;
 }
+
+// Adds exactly one fixed delta time to the accumulator. Allows stepping while paused.
+void TimeManager::step() {
+    if (m_isPaused) {
+        m_accumulator += years_t( (1/60.0) * m_timeScale ); // assuming 60 FPS fixed step
+    }
+}
+
+bool TimeManager::getPauseState() const
+{
+    return m_isPaused;
+}

@@ -23,10 +23,13 @@ public:
   void decreaseTimeScale(float factor);
   bool shouldUpdatePhysics() const;
   void consumePhysicsTime();
+  void step();
 
   // TODO: Implement if needed
   void togglePause(); // Method to toggle the pause state
   void resetAccumulator(); 
   void haltTime();
+
+  bool getPauseState() const; 
 };
 #endif // TIME_MANAGER_H
