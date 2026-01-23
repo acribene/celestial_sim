@@ -14,13 +14,17 @@ class Simulation
     std::vector<Body> m_bodies;      // Collection of all celestial bodies in the simulation
     double m_timeScale;              // Time scaling factor for simulation speed
     Quadtree m_quadtree;             // Barnes-Hut quadtree for efficient force calculations
-    double m_theta;                  // Barnes-Hut approximation parameter (lower = more accurate)
+
+    // Barnes-Hut approximation parameter (lower = more accurate) : 0 becomes brute force, .3 - .5 accurate, 1.0 max value for accuracy,
+    // 1.5 if accuracy doesn't matter, any greater than that significant errors occur.
+    double m_theta;
+
     size_t m_threadCount;            // Number of threads for parallelization
     ThreadPool m_threadPool;         // Thread pool for parallel calculations
     bool m_toggleWF;                 // A toggle for the wireframe rendering.
 
     public:
-    Simulation(double theta = 0.5);
+    Simulation( double theta = 0.5 );
     ~Simulation() = default;
 
     // Will not support copying of simulations
