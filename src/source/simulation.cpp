@@ -12,7 +12,8 @@ Simulation::Simulation(double theta)
       m_quadtree(Quadtree(theta, SOFTENING)),
       m_theta(theta),
       m_threadCount(std::thread::hardware_concurrency() > 0 ? std::thread::hardware_concurrency() : 4),
-      m_threadPool(m_threadCount)
+      m_threadPool(m_threadCount),
+      m_toggleWF(false)
 {
 }
 
@@ -89,7 +90,7 @@ void Simulation::render()
     {
         body.draw();
     }
-    //m_quadtree.render(); // Uncomment to visualize quadtree -- Will eventually be a toggle option
+    if( m_toggleWF ) { m_quadtree.render(); } 
 }
 
 // Removes all bodies from current simulation

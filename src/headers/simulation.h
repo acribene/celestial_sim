@@ -17,6 +17,7 @@ class Simulation
     double m_theta;                  // Barnes-Hut approximation parameter (lower = more accurate)
     size_t m_threadCount;            // Number of threads for parallelization
     ThreadPool m_threadPool;         // Thread pool for parallel calculations
+    bool m_toggleWF;                 // A toggle for the wireframe rendering.
 
     public:
     Simulation(double theta = 0.5);
@@ -38,9 +39,9 @@ class Simulation
     void saveState(const std::string& filename);
     void loadState(const std::string& filename);
 
-    // Theta parameter management
     void setTheta(double theta);
     double getTheta() const { return m_theta; }
+    void toggleWF() { m_toggleWF = !m_toggleWF; }
 };
 
 #endif // SIMULATION_H

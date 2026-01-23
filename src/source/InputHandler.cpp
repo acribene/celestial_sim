@@ -16,6 +16,7 @@ void InputHandler::handleCameraInput(CameraController& cameraController) {
 }
 
 void InputHandler::handleSimulationInput(Simulation& simulation) {
+    if( IsKeyPressed(KEY_T) ) { simulation.toggleWF(); }
     // Add simulation-specific input handling here
     // For example: adding bodies, resetting, etc.
 }

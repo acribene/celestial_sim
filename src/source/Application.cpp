@@ -94,7 +94,7 @@ void Application::render()
     if (timeManager_.getPauseState()) { 
         DrawText("PAUSED (Press ENTER to Step)", 10, 130, 20, RED);
     }
-    DrawText("Controls: Arrow keys to pan, A/Z to zoom, +/- to change time scale", 10, 100, 20, WHITE);
+    DrawText("Controls: Arrow keys to pan, A/Z to zoom, +/- to change time scale, space to pause", 10, 100, 20, WHITE);
 
     EndDrawing();
 }
@@ -108,6 +108,7 @@ void Application::processInput()
 {
     InputHandler::handleTimeScaleInput(timeManager_);
     InputHandler::handleCameraInput(cameraController_);
+    InputHandler::handleSimulationInput(simulation_);
 }
 
 void Application::run()
