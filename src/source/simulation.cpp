@@ -3,6 +3,7 @@
 #include <cmath>
 #include <random>
 #include <thread>
+#include "simulation.h"
 
 // Default ctor sets bodies to stl vector default and puts timescale at 1 (real time)
 // Initialize quadtree with theta (default 0.5) and epsilon from constants
@@ -185,4 +186,19 @@ void Simulation::generateProPlanetaryDisk(int count, Vec2 centerPoint, Vec2 velo
         // Add the body
         addBody(Body(mass, radius, position, velocity, WHITE));
     }    
+}
+
+Body *Simulation::getBodyAt(Vec2 worldPos)
+{
+    for( auto body = m_bodies.rbegin(); body != m_bodies.rend(); ++body ) {
+        // Simple Circle Collision: Distance Squared < Radius Squared
+        double dx = worldPos.getX() - body->getPos().getX();
+        double dy = worldPos.getY() - body->getPos().getY();
+        double distSq = dx*dx + dy*dy;
+        
+        if (distSq <= (body->m_radius * body->m_radius)) {
+            return &(*body);
+        }
+    }
+    return nullptr;
 }

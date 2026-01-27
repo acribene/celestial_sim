@@ -2,7 +2,6 @@
 #ifndef SIDEBAR_H
 #define SIDEBAR_H
 #include "raylib.h"
-#define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 #include "Body.h"
 
