@@ -60,6 +60,11 @@ void Body::setMass(double mass)
     m_mass = mass;
 }
 
+void Body::setRadius(double radius)
+{
+    m_radius = radius;
+}
+
 Vec2 Body::getPos() const
 {
     return m_position;
@@ -78,4 +83,9 @@ Vec2 Body::getAcc() const
 double Body::getMass() const
 {
     return m_mass;
+}
+
+double Body::getRadius() const
+{
+    return m_radius;
 }

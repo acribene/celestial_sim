@@ -46,11 +46,13 @@ class Body {
     void setVel(Vec2 vel);
     void setAcc(Vec2 acc);
     void setMass(double mass);
+    void setRadius(double radius);
 
     // Getters
     Vec2 getPos() const;
     Vec2 getVel() const;
     Vec2 getAcc() const;
     double getMass() const;
+    double getRadius() const;
 };
 #endif // BODY_H

@@ -3,7 +3,6 @@
 #include <cmath>
 #include <random>
 #include <thread>
-#include "simulation.h"
 
 // Default ctor sets bodies to stl vector default and puts timescale at 1 (real time)
 // Initialize quadtree with theta (default 0.5) and epsilon from constants
