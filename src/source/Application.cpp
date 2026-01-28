@@ -1,7 +1,7 @@
 #include "../headers/Application.h"
 #include "raylib.h"
 
-Application::Application(int width, int height) : isRunning_(false), cameraController_(width, height), timeManager_(TimeManager()), simulation_(Simulation()) {
+Application::Application(int width, int height) : isRunning_(false), cameraController_(width, height), timeManager_(TimeManager()), simulation_(Simulation()), sidebar_(Sidebar()) {
     initialize();
 }
 
@@ -76,6 +76,7 @@ void Application::update()
         simulation_.update(timeManager_.getFixedDeltaTime());
         timeManager_.consumePhysicsTime();
     }
+    sidebar_.update(GetFrameTime());
 }
 
 void Application::render()
@@ -88,13 +89,15 @@ void Application::render()
     EndMode2D();
 
     // Display information
-    DrawText("2D Physics Simulator", 10, 10, 20, WHITE);
-    DrawText(TextFormat("Time Scale: %.2f", timeManager_.getTimeScale()), 10, 40, 20, WHITE);
-    DrawText(TextFormat("FPS: %d", GetFPS()), 10, 70, 20, WHITE);
-    if (timeManager_.getPauseState()) { 
-        DrawText("PAUSED (Press ENTER to Step)", 10, 130, 20, RED);
-    }
-    DrawText("Controls: Arrow keys to pan, A/Z to zoom, +/- to change time scale, space to pause", 10, 100, 20, WHITE);
+    // DrawText("2D Physics Simulator", 10, 10, 20, WHITE);
+    // DrawText(TextFormat("Time Scale: %.2f", timeManager_.getTimeScale()), 10, 40, 20, WHITE);
+    // DrawText(TextFormat("FPS: %d", GetFPS()), 10, 70, 20, WHITE);
+    // if (timeManager_.getPauseState()) { 
+    //     DrawText("PAUSED (Press ENTER to Step)", 10, 130, 20, RED);
+    // }
+    // DrawText("Controls: Arrow keys to pan, A/Z to zoom, +/- to change time scale, space to pause", 10, 100, 20, WHITE);
+
+    sidebar_.render();
 
     EndDrawing();
 }
@@ -109,6 +112,7 @@ void Application::processInput()
     InputHandler::handleTimeScaleInput(timeManager_);
     InputHandler::handleCameraInput(cameraController_);
     InputHandler::handleSimulationInput(simulation_);
+    InputHandler::handleSelection(sidebar_, simulation_, cameraController_.getCamera());
 }
 
 void Application::run()

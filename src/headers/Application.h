@@ -5,6 +5,7 @@
 #include "TimeManager.h"
 #include "CameraController.h"
 #include "InputHandler.h"
+#include "Sidebar.h"
 #include "../utils/constants.h"
 
 class Application
@@ -14,6 +15,7 @@ class Application
     CameraController cameraController_; // Manages camera movement and zoom
     TimeManager timeManager_; // Manages discrepencies between simulation and real time
     Simulation simulation_; // The main simulation instance
+    Sidebar sidebar_; // UI Sidebar for controls and info
 
     void initialize();
     void update();

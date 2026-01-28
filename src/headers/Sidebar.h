@@ -8,7 +8,8 @@
 // Enum for sidebar tabs
 enum SidebarTab {
     INSPECTOR,
-    SETTINGS
+    SETTINGS,
+    DEBUG
 };
 
 class Sidebar {

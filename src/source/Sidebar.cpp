@@ -1,5 +1,6 @@
 #define RAYGUI_IMPLEMENTATION
 #include "../headers/Sidebar.h"
+#include <iostream>
 
 Sidebar::Sidebar() {
     bounds_ = { 0, 0, 0, (float)GetScreenHeight() }; // Left side, full height
@@ -18,7 +19,7 @@ void Sidebar::update(float dt) {
 void Sidebar::render() {
     // Draw Background
     if (currentWidth_ < 1.0f) return; // Don't draw if closed
-    
+
     DrawRectangleRec(bounds_, Fade(DARKGRAY, 0.95f));
     DrawRectangleLinesEx(bounds_, 2, LIGHTGRAY);
 
@@ -28,6 +29,7 @@ void Sidebar::render() {
         // --- TABS  ---
         if (GuiButton((Rectangle){ 10, 10, 80, 30 }, "Inspector")) currentTab_ = SidebarTab::INSPECTOR;
         if (GuiButton((Rectangle){ 100, 10, 80, 30 }, "Settings")) currentTab_ = SidebarTab::SETTINGS;
+        if (GuiButton((Rectangle){ 190, 10, 80, 30 }, "Debug")) currentTab_ = SidebarTab::DEBUG;
 
         if (currentTab_ == SidebarTab::INSPECTOR) {
             if (selectedBody_ != nullptr) {

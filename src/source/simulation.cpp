@@ -189,13 +189,30 @@ void Simulation::generateProPlanetaryDisk(int count, Vec2 centerPoint, Vec2 velo
 
 Body *Simulation::getBodyAt(Vec2 worldPos)
 {
+    // Setup the same constants used in Body::draw
+    double halfWidth = WINDOW_WIDTH / 2.0;
+    double halfHeight = WINDOW_HEIGHT / 2.0;
+
     for( auto body = m_bodies.rbegin(); body != m_bodies.rend(); ++body ) {
-        // Simple Circle Collision: Distance Squared < Radius Squared
-        double dx = worldPos.getX() - body->getPos().getX();
-        double dy = worldPos.getY() - body->getPos().getY();
+        
+        // Convert the Body's Physics Position to "Visual Position"
+        double visualX = halfWidth + body->getPos().getX() * SCALE;
+        double visualY = halfHeight + body->getPos().getY() * SCALE;
+
+        // 3. Calculate Distance in Visual/Pixel Space
+        double dx = worldPos.getX() - visualX;
+        double dy = worldPos.getY() - visualY;
         double distSq = dx*dx + dy*dy;
         
-        if (distSq <= (body->m_radius * body->m_radius)) {
+        // Calculate Visual Radius (including the minimum 3.0 pixel clamp)
+        // If we don't do this, small planets (radius < 1 pixel) will be unclickable
+        double visualRadius = body->getRadius() * SCALE;
+        if (visualRadius < 3.0) {
+            visualRadius = 3.0;
+        }
+
+        // Check collision
+        if (distSq <= (visualRadius * visualRadius)) {
             return &(*body);
         }
     }
