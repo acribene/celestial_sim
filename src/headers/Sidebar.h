@@ -4,12 +4,13 @@
 #include "raylib.h"
 #include "raygui.h"
 #include "Body.h"
+#include "TimeManager.h"
 
 // Enum for sidebar tabs
 enum SidebarTab {
     INSPECTOR,
     SETTINGS,
-    DEBUG
+    INFO
 };
 
 class Sidebar {
@@ -29,7 +30,7 @@ public:
     
     // Core loop
     void update(float dt);
-    void render();
+    void render(TimeManager& timeManager);
 
     // Selection logic
     void selectBody(Body* body);

@@ -16,7 +16,7 @@ void Sidebar::update(float dt) {
     bounds_.height = (float)GetScreenHeight(); // Handle window resizing
 }
 
-void Sidebar::render() {
+void Sidebar::render(TimeManager& timeManager) {
     // Draw Background
     if (currentWidth_ < 1.0f) return; // Don't draw if closed
 
@@ -29,7 +29,7 @@ void Sidebar::render() {
         // --- TABS  ---
         if (GuiButton((Rectangle){ 10, 10, 80, 30 }, "Inspector")) currentTab_ = SidebarTab::INSPECTOR;
         if (GuiButton((Rectangle){ 100, 10, 80, 30 }, "Settings")) currentTab_ = SidebarTab::SETTINGS;
-        if (GuiButton((Rectangle){ 190, 10, 80, 30 }, "Debug")) currentTab_ = SidebarTab::DEBUG;
+        if (GuiButton((Rectangle){ 190, 10, 80, 30 }, "Info")) currentTab_ = SidebarTab::INFO;
 
         if (currentTab_ == SidebarTab::INSPECTOR) {
             if (selectedBody_ != nullptr) {
@@ -57,6 +57,28 @@ void Sidebar::render() {
             } else {
                 GuiLabel((Rectangle){ 10, 50, 200, 20 }, "No body selected.");
             }
+        }
+        else if(currentTab_ == SidebarTab::SETTINGS) {
+            GuiLabel((Rectangle){ 10, 50, 200, 20 }, "Simulation Settings");
+            // Add settings controls here
+        }
+        else if(currentTab_ == SidebarTab::INFO) {            
+            GuiLabel((Rectangle){ 10, 50, 200, 20 }, "2D Physics Simulator");
+            
+            GuiLabel((Rectangle){ 10, 80, 200, 20 }, TextFormat("FPS: %d", GetFPS()));
+            GuiLabel((Rectangle){ 10, 100, 200, 20 }, TextFormat("Time Scale: %.2f", timeManager.getTimeScale()));
+
+            if (timeManager.getPauseState()) { 
+                DrawText("PAUSED", 10, 130, 20, RED);
+                GuiLabel((Rectangle){ 10, 150, 200, 20 }, "(Press ENTER to Step)");
+            }
+
+            int startY = 200;
+            GuiLabel((Rectangle){ 10.0f, (float)startY, 250, 20 }, "CONTROLS:");
+            GuiLabel((Rectangle){ 10.0f, (float)startY + 25, 250, 20 }, "- Arrow keys: Pan Camera");
+            GuiLabel((Rectangle){ 10.0f, (float)startY + 45, 250, 20 }, "- Scroll / A / Z: Zoom");
+            GuiLabel((Rectangle){ 10.0f, (float)startY + 65, 250, 20 }, "- +/- : Change Time Scale");
+            GuiLabel((Rectangle){ 10.0f, (float)startY + 85, 250, 20 }, "- Space : Pause/Resume");
         }
     }
 }
