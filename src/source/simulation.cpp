@@ -187,6 +187,29 @@ void Simulation::generateProPlanetaryDisk(int count, Vec2 centerPoint, Vec2 velo
     }    
 }
 
+void Simulation::addBodyAt(Vec2 worldPos, Body body)
+{
+    // // Setup the same constants used in Body::draw
+    // double halfWidth = WINDOW_WIDTH / 2.0;
+    // double halfHeight = WINDOW_HEIGHT / 2.0;
+
+    // // Convert the worldPos (pixel space) to simulation space (AU)
+    // double simX = (worldPos.getX() - halfWidth) / SCALE;
+    // double simY = (worldPos.getY() - halfHeight) / SCALE;
+
+    // body.setPos(Vec2(simX, simY));
+    // m_bodies.push_back(body);
+}
+
+void Simulation::DeleteBodyAt(Vec2 worldPos) {
+    for( auto body = m_bodies.rbegin(); body != m_bodies.rend(); ++body ) {
+        if( body->getPos() == worldPos ) {
+            m_bodies.erase( std::next(body).base() );
+            break;
+        }
+    }
+}
+
 Body *Simulation::getBodyAt(Vec2 worldPos)
 {
     // Setup the same constants used in Body::draw

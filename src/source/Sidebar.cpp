@@ -2,7 +2,7 @@
 #include "../headers/Sidebar.h"
 #include <iostream>
 
-Sidebar::Sidebar() {
+Sidebar::Sidebar( Simulation& sim, TimeManager& timeMgr ) : simulation_(sim), timeManager_(timeMgr) {
     bounds_ = { 0, 0, 0, (float)GetScreenHeight() }; // Left side, full height
 }
 
@@ -16,7 +16,7 @@ void Sidebar::update(float dt) {
     bounds_.height = (float)GetScreenHeight(); // Handle window resizing
 }
 
-void Sidebar::render(TimeManager& timeManager) {
+void Sidebar::render() {
     // Draw Background
     if (currentWidth_ < 1.0f) return; // Don't draw if closed
 
@@ -35,23 +35,27 @@ void Sidebar::render(TimeManager& timeManager) {
             if (selectedBody_ != nullptr) {
                 GuiLabel((Rectangle){ 10, 50, 200, 20 }, "Body Properties");
 
-                // Mass Slider
-                // We use a temp float because GuiSliderPro uses float pointers
-                float massVal = (float)selectedBody_->getMass(); 
-                if (GuiSlider((Rectangle){ 60, 90, 150, 20 }, "Mass", TextFormat("%.2e", massVal), &massVal, 0.1f, 100.0f)) {
-                    selectedBody_->setMass((double)massVal);
+                // Mass Slider (Logarithmic Control)
+                // We control the 'exponent' from -8.0 to 1.0
+                double currentMass = selectedBody_->getMass();
+                float oldLogMass = (float)log10(currentMass); 
+                float logMass = oldLogMass;
+                GuiSlider((Rectangle){ 60, 90, 150, 20 }, "Mass", TextFormat("%.2e", currentMass), &logMass, -8.0f, 1.0f);
+                if (logMass != oldLogMass) {
+                    selectedBody_->setMass(pow(10.0, logMass));
+                    std::cout << "Mass set to: " << selectedBody_->getMass() << " M☉" << std::endl;
                 }
 
                 // Radius Slider
-                float radVal = (float)selectedBody_->getRadius();
-                if (GuiSlider((Rectangle){ 60, 120, 150, 20 }, "Radius", TextFormat("%.2f", radVal), &radVal, 0.01f, 5.0f)) {
-                    selectedBody_->setRadius((double)radVal);
-                }
+                // float radVal = (float)selectedBody_->getRadius();
+                // if (GuiSlider((Rectangle){ 60, 120, 150, 20 }, "Radius", TextFormat("%.2f", radVal), &radVal, 0.01f, 5.0f)) {
+                //     selectedBody_->setRadius((double)radVal);
+                // }
 
                 // Delete Button
                 if (GuiButton((Rectangle){ 10, 400, 220, 30 }, "DELETE BODY")) {
-                    // Need a way to mark bodies for deletion
-                    // selectedBody_->isDead = true; 
+                    // Find and remove the selected body from the simulation
+                    simulation_.DeleteBodyAt( selectedBody_->getPos() );
                     deselect();
                 }
             } else {
@@ -66,9 +70,9 @@ void Sidebar::render(TimeManager& timeManager) {
             GuiLabel((Rectangle){ 10, 50, 200, 20 }, "2D Physics Simulator");
             
             GuiLabel((Rectangle){ 10, 80, 200, 20 }, TextFormat("FPS: %d", GetFPS()));
-            GuiLabel((Rectangle){ 10, 100, 200, 20 }, TextFormat("Time Scale: %.2f", timeManager.getTimeScale()));
+            GuiLabel((Rectangle){ 10, 100, 200, 20 }, TextFormat("Time Scale: %.2f", timeManager_.getTimeScale()));
 
-            if (timeManager.getPauseState()) { 
+            if (timeManager_.getPauseState()) { 
                 DrawText("PAUSED", 10, 130, 20, RED);
                 GuiLabel((Rectangle){ 10, 150, 200, 20 }, "(Press ENTER to Step)");
             }

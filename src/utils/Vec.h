@@ -90,5 +90,13 @@ class Vec2
     inline void setY(double newY) {
         y = newY;
     }
+
+    friend bool operator==(const Vec2& lhs, const Vec2& rhs) {
+        return (lhs.x == rhs.x) && (lhs.y == rhs.y);
+    }
+
+    friend bool operator!=(const Vec2& lhs, const Vec2& rhs) {
+        return !(lhs == rhs);
+    }
 };
 #endif

@@ -1,7 +1,7 @@
 #include "../headers/Application.h"
 #include "raylib.h"
 
-Application::Application(int width, int height) : isRunning_(false), cameraController_(width, height), timeManager_(TimeManager()), simulation_(Simulation()), sidebar_(Sidebar()) {
+Application::Application(int width, int height) : isRunning_(false), cameraController_(width, height), timeManager_(TimeManager()), simulation_(Simulation()), sidebar_(simulation_, timeManager_) {
     initialize();
 }
 
@@ -88,7 +88,7 @@ void Application::render()
     simulation_.render();
     EndMode2D();
 
-    sidebar_.render(timeManager_);
+    sidebar_.render();
 
     EndDrawing();
 }

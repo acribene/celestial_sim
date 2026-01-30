@@ -5,6 +5,7 @@
 #include "raygui.h"
 #include "Body.h"
 #include "TimeManager.h"
+#include "simulation.h"
 
 // Enum for sidebar tabs
 enum SidebarTab {
@@ -24,13 +25,15 @@ private:
     // State
     Body* selectedBody_ = nullptr; // TODO: May change because of possible invalid pointers when bodies are removed
     SidebarTab currentTab_ = SidebarTab::INSPECTOR;
+    Simulation& simulation_;
+    TimeManager& timeManager_;
 
 public:
-    Sidebar();
+    Sidebar(Simulation& sim, TimeManager& timeMgr);
     
     // Core loop
     void update(float dt);
-    void render(TimeManager& timeManager);
+    void render();
 
     // Selection logic
     void selectBody(Body* body);
