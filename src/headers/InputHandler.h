@@ -13,7 +13,7 @@ public:
     static void handleTimeScaleInput(TimeManager& timeManager);
     static void handleCameraInput(CameraController& cameraController);
     static void handleSimulationInput(Simulation& simulation);
-    static void handleSelection(Sidebar& sidebar, Simulation& sim, const Camera2D& camera);
+    static void handleSelection(Sidebar& sidebar, Simulation& sim, const Camera2D& camera, TimeManager& timeMgr);
 };
 
 #endif // INPUT_HANDLER_H

@@ -78,9 +78,10 @@ void Simulation::update(years_t deltaT)
 }
 
 // Adds body to simulation
-void Simulation::addBody(Body body)
+Body* Simulation::addBody(Body body)
 {
     m_bodies.push_back(body);
+    return &m_bodies.back();
 }
 
 void Simulation::render()
@@ -185,20 +186,6 @@ void Simulation::generateProPlanetaryDisk(int count, Vec2 centerPoint, Vec2 velo
         // Add the body
         addBody(Body(mass, radius, position, velocity, WHITE));
     }    
-}
-
-void Simulation::addBodyAt(Vec2 worldPos, Body body)
-{
-    // // Setup the same constants used in Body::draw
-    // double halfWidth = WINDOW_WIDTH / 2.0;
-    // double halfHeight = WINDOW_HEIGHT / 2.0;
-
-    // // Convert the worldPos (pixel space) to simulation space (AU)
-    // double simX = (worldPos.getX() - halfWidth) / SCALE;
-    // double simY = (worldPos.getY() - halfHeight) / SCALE;
-
-    // body.setPos(Vec2(simX, simY));
-    // m_bodies.push_back(body);
 }
 
 void Simulation::DeleteBodyAt(Vec2 worldPos) {

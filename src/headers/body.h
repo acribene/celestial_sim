@@ -54,5 +54,13 @@ class Body {
     Vec2 getAcc() const;
     double getMass() const;
     double getRadius() const;
+
+    // For debugging
+    friend std::ostream& operator<<(std::ostream& os, const Body& body) {
+        os << "Body(Mass: " << body.m_mass << " M☉, Radius: " << body.m_radius << " AU, Position: (" 
+           << body.m_position.getX() << ", " << body.m_position.getY() << ") AU, Velocity: ("
+           << body.m_velocity.getX() << ", " << body.m_velocity.getY() << ") AU/yr)";
+        return os;
+    }
 };
 #endif // BODY_H

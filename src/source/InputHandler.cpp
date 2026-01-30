@@ -17,7 +17,7 @@ void InputHandler::handleSimulationInput(Simulation& simulation) {
     // Add simulation-specific input handling here
     // For example: adding bodies, resetting, etc.
 }
-void InputHandler::handleSelection(Sidebar &sidebar, Simulation &sim, const Camera2D &camera)
+void InputHandler::handleSelection(Sidebar &sidebar, Simulation &sim, const Camera2D &camera, TimeManager& timeMgr)
 {
     // Mouse Left Click
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -41,5 +41,33 @@ void InputHandler::handleSelection(Sidebar &sidebar, Simulation &sim, const Came
             // Clicked empty space
             sidebar.deselect();
         }
+    }
+    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+        // Don't click through the sidebar
+        if (sidebar.isMouseOver()) return;
+
+        // 1. Convert Screen Space -> World Space
+        Vector2 mouseScreen = GetMousePosition();
+        Vector2 mouseWorld = GetScreenToWorld2D(mouseScreen, camera);
+        double halfWidth = WINDOW_WIDTH / 2.0;
+        double halfHeight = WINDOW_HEIGHT / 2.0;
+
+        // Reverse the offset (subtract center)
+        double tempX = mouseWorld.x - halfWidth;
+        double tempY = mouseWorld.y - halfHeight;
+
+        // Reverse the scaling (divide by SCALE)
+        double simX = tempX / SCALE;
+        double simY = tempY / SCALE;
+        Vec2 simPos(simX, simY);
+
+        
+        // 2. Pause the simulation if it isn't already
+        if (!timeMgr.getPauseState()) {
+            timeMgr.togglePause();
+        }
+
+        // 3. Open Sidebar in Creation Mode
+        sidebar.openCreationMenu(simPos);
     }
 }

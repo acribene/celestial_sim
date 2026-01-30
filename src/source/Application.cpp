@@ -103,7 +103,7 @@ void Application::processInput()
     InputHandler::handleTimeScaleInput(timeManager_);
     InputHandler::handleCameraInput(cameraController_);
     InputHandler::handleSimulationInput(simulation_);
-    InputHandler::handleSelection(sidebar_, simulation_, cameraController_.getCamera());
+    InputHandler::handleSelection(sidebar_, simulation_, cameraController_.getCamera(), timeManager_);
 }
 
 void Application::run()

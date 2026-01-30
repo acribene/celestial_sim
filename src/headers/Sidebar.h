@@ -8,10 +8,11 @@
 #include "simulation.h"
 
 // Enum for sidebar tabs
-enum SidebarTab {
+enum class SidebarTab {
     INSPECTOR,
     SETTINGS,
-    INFO
+    INFO,
+    CREATOR
 };
 
 class Sidebar {
@@ -28,12 +29,15 @@ private:
     Simulation& simulation_;
     TimeManager& timeManager_;
 
+    Body tempBody_ = Body(); // Temporary body for creation tab
+
 public:
     Sidebar(Simulation& sim, TimeManager& timeMgr);
     
     // Core loop
     void update(float dt);
     void render();
+    void openCreationMenu(Vec2 worldPos);
 
     // Selection logic
     void selectBody(Body* body);

@@ -28,8 +28,9 @@ void Sidebar::render() {
         
         // --- TABS  ---
         if (GuiButton((Rectangle){ 10, 10, 80, 30 }, "Inspector")) currentTab_ = SidebarTab::INSPECTOR;
-        if (GuiButton((Rectangle){ 100, 10, 80, 30 }, "Settings")) currentTab_ = SidebarTab::SETTINGS;
-        if (GuiButton((Rectangle){ 190, 10, 80, 30 }, "Info")) currentTab_ = SidebarTab::INFO;
+        if (GuiButton((Rectangle){ 100, 10, 60, 30 }, "Create")) currentTab_ = SidebarTab::CREATOR;
+        if (GuiButton((Rectangle){ 190, 10, 80, 30 }, "Settings")) currentTab_ = SidebarTab::SETTINGS;
+        if (GuiButton((Rectangle){ 280, 10, 80, 30 }, "Info")) currentTab_ = SidebarTab::INFO;
 
         if (currentTab_ == SidebarTab::INSPECTOR) {
             if (selectedBody_ != nullptr) {
@@ -43,7 +44,6 @@ void Sidebar::render() {
                 GuiSlider((Rectangle){ 60, 90, 150, 20 }, "Mass", TextFormat("%.2e", currentMass), &logMass, -8.0f, 1.0f);
                 if (logMass != oldLogMass) {
                     selectedBody_->setMass(pow(10.0, logMass));
-                    std::cout << "Mass set to: " << selectedBody_->getMass() << " M☉" << std::endl;
                 }
 
                 // Radius Slider
@@ -84,7 +84,55 @@ void Sidebar::render() {
             GuiLabel((Rectangle){ 10.0f, (float)startY + 65, 250, 20 }, "- +/- : Change Time Scale");
             GuiLabel((Rectangle){ 10.0f, (float)startY + 85, 250, 20 }, "- Space : Pause/Resume");
         }
+        else if(currentTab_ == SidebarTab::CREATOR) {
+            GuiLabel((Rectangle){ 10, 50, 200, 20 }, "Create New Body");
+            GuiLabel((Rectangle){ 10, 70, 200, 20 }, TextFormat("Pos: %.2f, %.2f AU", tempBody_.getPos().getX(), tempBody_.getPos().getY()));
+
+            // Mass
+            GuiLabel((Rectangle){ 10, 100, 200, 20 }, "Mass (Log Scale)");
+            double realMass = pow(10.0, tempBody_.getMass());
+            float tempLogMass = (float)tempBody_.getMass();
+            GuiSlider((Rectangle){ 60, 120, 150, 20 }, "Mass", TextFormat("%.2e", realMass), &tempLogMass, -8.0f, 1.0f);
+            tempBody_.setMass(tempLogMass);
+
+            // Radius
+            GuiLabel((Rectangle){ 10, 150, 200, 20 }, "Radius (Size)");
+            float newBodyRadius_ = (float)tempBody_.getRadius();
+            GuiSlider((Rectangle){ 60, 170, 150, 20 }, "Rad", TextFormat("%.3f", newBodyRadius_), &newBodyRadius_, 0.01f, 0.5f);
+            tempBody_.setRadius(newBodyRadius_);
+
+            // Velocity
+            GuiLabel((Rectangle){ 10, 200, 200, 20 }, "Velocity X (AU/yr)");
+            float tempVelX = (float)tempBody_.getVel().getX();
+            GuiSlider((Rectangle){ 60, 220, 150, 20 }, "VX", TextFormat("%.2f", tempBody_.getVel().getX()), &tempVelX, -10.0f, 10.0f);
+            tempBody_.getVel().setX(tempVelX);
+
+            GuiLabel((Rectangle){ 10, 250, 200, 20 }, "Velocity Y (AU/yr)");
+            float tempVelY = (float)tempBody_.getVel().getY();
+            GuiSlider((Rectangle){ 60, 270, 150, 20 }, "VY", TextFormat("%.2f", tempBody_.getVel().getY()), &tempVelY, -10.0f, 10.0f);
+            tempBody_.getVel().setY(tempVelY);
+
+            // Create Button
+            if (GuiButton((Rectangle){ 10, 320, 220, 40 }, "SPAWN BODY")) {
+                Body newBody( tempBody_ );
+                selectedBody_ = nullptr;
+                isOpen_ = true;
+                currentTab_ = SidebarTab::INSPECTOR;
+                timeManager_.togglePause(); // Unpause on creation
+            }
+        }
     }
+}
+
+void Sidebar::openCreationMenu(Vec2 worldPos) {
+    tempBody_.setPos(worldPos);
+    currentTab_ = SidebarTab::CREATOR;
+    isOpen_ = true;
+    
+    // Reset defaults for a new body
+    tempBody_.setMass(-6.0); // 10^-6 Solar masses
+    tempBody_.setRadius(0.05f);
+    tempBody_.setVel(Vec2(0.0, 0.0));
 }
 
 void Sidebar::selectBody(Body* body) {

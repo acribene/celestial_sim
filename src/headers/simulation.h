@@ -34,12 +34,11 @@ class Simulation
     Simulation& operator=(Simulation&& rhs) = delete;
 
     void update(years_t deltaT);
-    void addBody(Body body);
+    Body* addBody(Body body);
     void render();
     void reset();
     void generateProPlanetaryDisk(int count, Vec2 centerPoint = Vec2(0, 0), Vec2 velocity = Vec2(0, 0), bool centralMass = true);
 
-    void addBodyAt(Vec2 worldPos, Body body);
     void DeleteBodyAt(Vec2 worldPos);
     Body* getBodyAt(Vec2 worldPos);
 
