@@ -115,23 +115,30 @@ void Sidebar::render() {
             // Create Button
             if (GuiButton((Rectangle){ 10, 320, 220, 40 }, "SPAWN BODY")) {
                 Body newBody( tempBody_ );
+                simulation_.addBody( newBody );
                 selectedBody_ = nullptr;
                 isOpen_ = true;
                 currentTab_ = SidebarTab::INSPECTOR;
-                timeManager_.togglePause(); // Unpause on creation
+                //timeManager_.togglePause(); // Unpause on creation
             }
         }
     }
 }
 
 void Sidebar::openCreationMenu(Vec2 worldPos) {
+    tempBody_ = Body(); // Reset temporary body
     tempBody_.setPos(worldPos);
     currentTab_ = SidebarTab::CREATOR;
     isOpen_ = true;
     
-    // Reset defaults for a new body
-    tempBody_.setMass(-6.0); // 10^-6 Solar masses
-    tempBody_.setRadius(0.05f);
+    // Store REAL mass (10^-6), not the log value (-6.0)
+    tempBody_.setMass(pow(10.0, -6.0)); 
+    
+    // Auto-calculate initial radius based on the mass
+    double logMass = -6.0;
+    double autoRadius = 0.02 + 0.005 * (logMass + 8.0);
+    tempBody_.setRadius(autoRadius);
+    
     tempBody_.setVel(Vec2(0.0, 0.0));
 }
 
