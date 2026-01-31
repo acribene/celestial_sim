@@ -101,7 +101,7 @@ void Sidebar::render() {
             tempBody_.setMass(pow(10.0, currentLogMass));
 
             // --- RADIUS (Auto-calculated) ---
-            // Formula: radius = 0.02 + 0.005 * (log_mass + 8.0)
+            // Formula: same as in rendering for consistency
             double calculatedRadius = 0.02 + 0.005 * (currentLogMass + 8.0);
             
             // Update the temp body immediately
@@ -112,25 +112,26 @@ void Sidebar::render() {
             // Draw a disabled slider or just a value box to visualize it
             GuiStatusBar((Rectangle){ 60, 170, 150, 20 }, TextFormat("%.4f AU", calculatedRadius));
 
-
             // --- VELOCITY ---
+            Vec2 currentVel = tempBody_.getVel();
             GuiLabel((Rectangle){ 10, 200, 200, 20 }, "Velocity X (AU/yr)");
-            float tempVelX = (float)tempBody_.getVel().getX();
-            GuiSlider((Rectangle){ 60, 220, 150, 20 }, "VX", TextFormat("%.2f", tempBody_.getVel().getX()), &tempVelX, -10.0f, 10.0f);
-            tempBody_.getVel().setX(tempVelX);
+            float tempVelX = (float)currentVel.getX();
+            GuiSlider((Rectangle){ 60, 220, 150, 20 }, "VX", TextFormat("%.2f", tempVelX), &tempVelX, -10.0f, 10.0f);
+            currentVel.setX(tempVelX);
 
             GuiLabel((Rectangle){ 10, 250, 200, 20 }, "Velocity Y (AU/yr)");
-            float tempVelY = (float)tempBody_.getVel().getY();
-            GuiSlider((Rectangle){ 60, 270, 150, 20 }, "VY", TextFormat("%.2f", tempBody_.getVel().getY()), &tempVelY, -10.0f, 10.0f);
-            tempBody_.getVel().setY(tempVelY);
+            float tempVelY = (float)currentVel.getY();
+            GuiSlider((Rectangle){ 60, 270, 150, 20 }, "VY", TextFormat("%.2f", tempVelY), &tempVelY, -10.0f, 10.0f);
+            currentVel.setY(tempVelY);
+
+            tempBody_.setVel(currentVel);
 
             // Create Button
             if (GuiButton((Rectangle){ 10, 320, 220, 40 }, "SPAWN BODY")) {
                 Body newBody( tempBody_ );
-                selectedBody_ = simulation_.addBody( newBody );
-                
-                //selectedBody_ = nullptr;
-                currentTab_ = SidebarTab::INSPECTOR; 
+                selectedBody_ = simulation_.addBody( newBody );                
+                currentTab_ = SidebarTab::INSPECTOR;
+                timeManager_.togglePause(); // Unpause on creation
             }
         }
     }
