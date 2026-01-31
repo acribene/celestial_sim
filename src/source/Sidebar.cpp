@@ -85,23 +85,35 @@ void Sidebar::render() {
             GuiLabel((Rectangle){ 10.0f, (float)startY + 85, 250, 20 }, "- Space : Pause/Resume");
         }
         else if(currentTab_ == SidebarTab::CREATOR) {
-            GuiLabel((Rectangle){ 10, 50, 200, 20 }, "Create New Body");
+           GuiLabel((Rectangle){ 10, 50, 200, 20 }, "Create New Body");
             GuiLabel((Rectangle){ 10, 70, 200, 20 }, TextFormat("Pos: %.2f, %.2f AU", tempBody_.getPos().getX(), tempBody_.getPos().getY()));
 
-            // Mass
+            // --- MASS (Log Scale) ---
             GuiLabel((Rectangle){ 10, 100, 200, 20 }, "Mass (Log Scale)");
-            double realMass = pow(10.0, tempBody_.getMass());
-            float tempLogMass = (float)tempBody_.getMass();
-            GuiSlider((Rectangle){ 60, 120, 150, 20 }, "Mass", TextFormat("%.2e", realMass), &tempLogMass, -8.0f, 1.0f);
-            tempBody_.setMass(tempLogMass);
+            
+            // 1. Get current log value from the real mass
+            float currentLogMass = (float)log10(tempBody_.getMass());
+            
+            // 2. Draw Slider using the log value
+            GuiSlider((Rectangle){ 60, 120, 150, 20 }, "Mass", TextFormat("%.2e Msun", tempBody_.getMass()), &currentLogMass, -8.0f, -4.0f);
+            
+            // 3. Convert back to real mass and update body
+            tempBody_.setMass(pow(10.0, currentLogMass));
 
-            // Radius
-            GuiLabel((Rectangle){ 10, 150, 200, 20 }, "Radius (Size)");
-            float newBodyRadius_ = (float)tempBody_.getRadius();
-            GuiSlider((Rectangle){ 60, 170, 150, 20 }, "Rad", TextFormat("%.3f", newBodyRadius_), &newBodyRadius_, 0.01f, 0.5f);
-            tempBody_.setRadius(newBodyRadius_);
+            // --- RADIUS (Auto-calculated) ---
+            // Formula: radius = 0.02 + 0.005 * (log_mass + 8.0)
+            double calculatedRadius = 0.02 + 0.005 * (currentLogMass + 8.0);
+            
+            // Update the temp body immediately
+            tempBody_.setRadius(calculatedRadius);
 
-            // Velocity
+            // Display as Read-Only Label instead of Slider
+            GuiLabel((Rectangle){ 10, 150, 200, 20 }, "Radius (Auto-Scaled)");
+            // Draw a disabled slider or just a value box to visualize it
+            GuiStatusBar((Rectangle){ 60, 170, 150, 20 }, TextFormat("%.4f AU", calculatedRadius));
+
+
+            // --- VELOCITY ---
             GuiLabel((Rectangle){ 10, 200, 200, 20 }, "Velocity X (AU/yr)");
             float tempVelX = (float)tempBody_.getVel().getX();
             GuiSlider((Rectangle){ 60, 220, 150, 20 }, "VX", TextFormat("%.2f", tempBody_.getVel().getX()), &tempVelX, -10.0f, 10.0f);
@@ -115,11 +127,10 @@ void Sidebar::render() {
             // Create Button
             if (GuiButton((Rectangle){ 10, 320, 220, 40 }, "SPAWN BODY")) {
                 Body newBody( tempBody_ );
-                simulation_.addBody( newBody );
-                selectedBody_ = nullptr;
-                isOpen_ = true;
-                currentTab_ = SidebarTab::INSPECTOR;
-                //timeManager_.togglePause(); // Unpause on creation
+                selectedBody_ = simulation_.addBody( newBody );
+                
+                //selectedBody_ = nullptr;
+                currentTab_ = SidebarTab::INSPECTOR; 
             }
         }
     }
