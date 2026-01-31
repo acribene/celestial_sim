@@ -26,40 +26,78 @@ void Sidebar::render() {
     // Draw Content only if expanded enough
     if (currentWidth_ > 200.0f) {
         
-        // --- TABS  ---
-        if (GuiButton((Rectangle){ 10, 10, 80, 30 }, "Inspector")) currentTab_ = SidebarTab::INSPECTOR;
-        if (GuiButton((Rectangle){ 100, 10, 60, 30 }, "Create")) currentTab_ = SidebarTab::CREATOR;
-        if (GuiButton((Rectangle){ 190, 10, 80, 30 }, "Settings")) currentTab_ = SidebarTab::SETTINGS;
-        if (GuiButton((Rectangle){ 280, 10, 80, 30 }, "Info")) currentTab_ = SidebarTab::INFO;
+        // --- TABS (Dynamic Layout) ---
+        // Calculate width so they fit perfectly within the sidebar
+        float padding = 10.0f;
+        float availableWidth = bounds_.width - (padding * 2);
+        float tabWidth = availableWidth / 4.0f;
+        float btnHeight = 30.0f;
+        
+        // Render Tabs
+        if (GuiButton((Rectangle){ padding, 10, tabWidth, btnHeight }, "Inspect")) currentTab_ = SidebarTab::INSPECTOR;
+        if (GuiButton((Rectangle){ padding + tabWidth, 10, tabWidth, btnHeight }, "Create")) currentTab_ = SidebarTab::CREATOR;
+        if (GuiButton((Rectangle){ padding + tabWidth*2, 10, tabWidth, btnHeight }, "Settings")) currentTab_ = SidebarTab::SETTINGS;
+        if (GuiButton((Rectangle){ padding + tabWidth*3, 10, tabWidth, btnHeight }, "Info")) currentTab_ = SidebarTab::INFO;
+
+        // --- SEPARATOR ---
+        DrawLine(10, 45, bounds_.width - 10, 45, LIGHTGRAY);
 
         if (currentTab_ == SidebarTab::INSPECTOR) {
             if (selectedBody_ != nullptr) {
                 GuiLabel((Rectangle){ 10, 50, 200, 20 }, "Body Properties");
+                
+                // Position Readout
+                GuiLabel((Rectangle){ 10, 70, 200, 20 }, TextFormat("Pos: %.2f, %.2f AU", selectedBody_->getPos().getX(), selectedBody_->getPos().getY()));
 
-                // Mass Slider (Logarithmic Control)
-                // We control the 'exponent' from -8.0 to 1.0
+                // --- MASS (Log Scale) ---
+                GuiLabel((Rectangle){ 10, 100, 200, 20 }, "Mass (Log Scale)");
+                
                 double currentMass = selectedBody_->getMass();
                 float oldLogMass = (float)log10(currentMass); 
                 float logMass = oldLogMass;
-                GuiSlider((Rectangle){ 60, 90, 150, 20 }, "Mass", TextFormat("%.2e", currentMass), &logMass, -8.0f, 1.0f);
+                
+                // Allow full range -8 to 1.0 (Planetesimal to Star)
+                GuiSlider((Rectangle){ 60, 120, 150, 20 }, "Mass", TextFormat("%.2e", currentMass), &logMass, -8.0f, 1.0f);
+                
                 if (logMass != oldLogMass) {
                     selectedBody_->setMass(pow(10.0, logMass));
+                    
+                    // Optional: Auto-scale radius in Inspector too?
+                    // This keeps it consistent with the Creator tab behavior
+                    double newRadius = 0.02 + 0.005 * (logMass + 8.0);
+                    selectedBody_->setRadius(newRadius);
                 }
 
-                // Radius Slider
-                // float radVal = (float)selectedBody_->getRadius();
-                // if (GuiSlider((Rectangle){ 60, 120, 150, 20 }, "Radius", TextFormat("%.2f", radVal), &radVal, 0.01f, 5.0f)) {
-                //     selectedBody_->setRadius((double)radVal);
-                // }
+                // --- RADIUS (Read Only / Auto) ---
+                GuiLabel((Rectangle){ 10, 150, 200, 20 }, "Radius (Auto-Scaled)");
+                GuiStatusBar((Rectangle){ 60, 170, 150, 20 }, TextFormat("%.4f AU", selectedBody_->getRadius()));
 
-                // Delete Button
-                if (GuiButton((Rectangle){ 10, 400, 220, 30 }, "DELETE BODY")) {
-                    // Find and remove the selected body from the simulation
+                // --- VELOCITY (Direct Control) ---
+                // 1. Get local copy
+                Vec2 currentVel = selectedBody_->getVel();
+
+                GuiLabel((Rectangle){ 10, 200, 200, 20 }, "Velocity X (AU/yr)");
+                float tempVelX = (float)currentVel.getX();
+                GuiSlider((Rectangle){ 60, 220, 150, 20 }, "VX", TextFormat("%.2f", tempVelX), &tempVelX, -10.0f, 10.0f);
+                currentVel.setX(tempVelX);
+
+                GuiLabel((Rectangle){ 10, 250, 200, 20 }, "Velocity Y (AU/yr)");
+                float tempVelY = (float)currentVel.getY();
+                GuiSlider((Rectangle){ 60, 270, 150, 20 }, "VY", TextFormat("%.2f", tempVelY), &tempVelY, -10.0f, 10.0f);
+                currentVel.setY(tempVelY);
+
+                // 2. Write back to real body
+                selectedBody_->setVel(currentVel);
+
+                // --- DELETE BUTTON ---
+                // Moved down slightly to make room for velocity controls
+                if (GuiButton((Rectangle){ 10, 320, availableWidth, 40 }, "DELETE BODY")) {
                     simulation_.DeleteBodyAt( selectedBody_->getPos() );
                     deselect();
                 }
             } else {
                 GuiLabel((Rectangle){ 10, 50, 200, 20 }, "No body selected.");
+                GuiLabel((Rectangle){ 10, 70, 200, 20 }, "Click a body to inspect.");
             }
         }
         else if(currentTab_ == SidebarTab::SETTINGS) {
