@@ -82,6 +82,9 @@ public:
 
     // Render the quadtree (for debugging)
     void render() const;
+
+    double getTheta() const;
+    void setTheta(double theta);
 };
 
 #endif // QUADTREE_H

@@ -49,6 +49,7 @@ class Simulation
     void setTheta(double theta);
     double getTheta() const { return m_theta; }
     void toggleWF() { m_toggleWF = !m_toggleWF; }
+    Quadtree& getQuadtree() { return m_quadtree; }
 };
 
 #endif // SIMULATION_H

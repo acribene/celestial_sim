@@ -243,3 +243,11 @@ void Quadtree::render() const
         }
     }
 }
+
+double Quadtree::getTheta() const {
+    return std::sqrt(m_thetasq);
+}
+
+void Quadtree::setTheta(double theta) {
+    m_thetasq = theta * theta;
+}

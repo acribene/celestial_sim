@@ -101,8 +101,27 @@ void Sidebar::render() {
             }
         }
         else if(currentTab_ == SidebarTab::SETTINGS) {
-            GuiLabel((Rectangle){ 10, 50, 200, 20 }, "Simulation Settings");
-            // Add settings controls here
+            // --- BARNES-HUT THETA ---
+
+            GuiLabel((Rectangle){ 10, 80, 200, 20 }, "Barnes-Hut Theta (Accuracy)");
+            
+            // Convert double to float for RayGui
+            float currentTheta = (float)simulation_.getQuadtree().getTheta();
+            float oldTheta = currentTheta;
+
+            // Slider Range: 0.0 (More Accurate/Slower) to 2.0 (Less Accurate/Faster)
+            // 0.5 is a common default for Barnes-Hut
+            GuiSlider((Rectangle){ 60, 100, 150, 20 }, "Theta", TextFormat("%.2f", currentTheta), &currentTheta, 0.0f, 2.0f);
+            
+            // Only update if changed to avoid unnecessary writes
+            if (currentTheta != oldTheta) {
+                simulation_.getQuadtree().setTheta((double)currentTheta);
+            }
+
+            // Explanatory Text
+            GuiLabel((Rectangle){ 10, 130, 230, 20 }, "0.0 = Brute Force (Slowest)");
+            GuiLabel((Rectangle){ 10, 150, 230, 20 }, "0.5 = Balanced");
+            GuiLabel((Rectangle){ 10, 170, 230, 20 }, ">1.0 = Fast Approximation");
         }
         else if(currentTab_ == SidebarTab::INFO) {            
             GuiLabel((Rectangle){ 10, 50, 200, 20 }, "2D Physics Simulator");
