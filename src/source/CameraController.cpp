@@ -6,7 +6,7 @@ CameraController::CameraController(int screenWidth, int screenHeight)
     camera_.target = { screenWidth/2.0f, screenHeight/2.0f };
     camera_.offset = { screenWidth/2.0f, screenHeight/2.0f };
     camera_.rotation = 0.0f;
-    camera_.zoom = 1.0f;
+    camera_.zoom = 0.5f;
 }
 
 void CameraController::update() {

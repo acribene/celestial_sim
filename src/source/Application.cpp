@@ -62,8 +62,8 @@ void Application::initialize() {
     // simulation_.addBody(saturn);
     // simulation_.addBody(uranus);
     // simulation_.addBody(neptune);
-    simulation_.generateProPlanetaryDisk(50, Vec2(-10, 0), Vec2(0, 1.49), true);  // Left disk moving up
-    simulation_.generateProPlanetaryDisk(50, Vec2(10, 0), Vec2(0, -1.49), true);  // Right disk moving down
+    simulation_.generateProPlanetaryDisk(100, Vec2(-10, 0), Vec2(0, 1.49), true);  // Left disk moving up
+    simulation_.generateProPlanetaryDisk(100, Vec2(10, 0), Vec2(0, -1.49), true);  // Right disk moving down
     
     isRunning_ = true;
 }
