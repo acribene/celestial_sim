@@ -42,9 +42,10 @@ class Simulation
     void DeleteBodyAt(Vec2 worldPos);
     Body* getBodyAt(Vec2 worldPos);
 
-    //  TODO: Saving and loading simulation state.
-    void saveState(const std::string& filename);
-    void loadState(const std::string& filename);
+    // Saving and loading simulation state.
+    void saveSimulation(const std::string& filename);
+    void loadSimulation(const std::string& filename);
+    void loadPreset(int preset);
 
     void setTheta(double theta);
     double getTheta() const { return m_theta; }

@@ -27,6 +27,7 @@ public:
 
   // TODO: Implement if needed
   void togglePause(); // Method to toggle the pause state
+  void setPause(bool pause); // Method to set the pause state
   void resetAccumulator(); 
   void haltTime();
 

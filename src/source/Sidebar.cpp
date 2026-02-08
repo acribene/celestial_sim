@@ -101,27 +101,46 @@ void Sidebar::render() {
             }
         }
         else if(currentTab_ == SidebarTab::SETTINGS) {
-            // --- BARNES-HUT THETA ---
-
-            GuiLabel((Rectangle){ 10, 80, 200, 20 }, "Barnes-Hut Theta (Accuracy)");
+            // --- SIMULATION CONTROLS ---
+            GuiLabel((Rectangle){ 10, 50, 200, 20 }, "Save / Load");
             
-            // Convert double to float for RayGui
+            // Save & Load Buttons
+            if (GuiButton((Rectangle){ 10, 70, 100, 30 }, "Save State")) {
+                simulation_.saveSimulation("quicksave.sim");
+            }
+            if (GuiButton((Rectangle){ 120, 70, 100, 30 }, "Load State")) {
+                simulation_.loadSimulation("quicksave.sim");
+            }
+
+            GuiLabel((Rectangle){ 10, 110, 200, 20 }, "Presets");
+            
+            // Preset Buttons
+            if (GuiButton((Rectangle){ 10, 130, 210, 30 }, "Solar System")) {
+                simulation_.loadPreset(0);
+                timeManager_.setPause(true); // Pause on load so user can get ready
+            }
+            if (GuiButton((Rectangle){ 10, 170, 210, 30 }, "Collision Event")) {
+                simulation_.loadPreset(1);
+            }
+            if (GuiButton((Rectangle){ 10, 210, 210, 30 }, "Random Disk")) {
+                simulation_.loadPreset(2);
+            }
+
+            // --- BARNES-HUT THETA ---
+            // Moved down to make room
+            GuiLabel((Rectangle){ 10, 260, 200, 20 }, "Barnes-Hut Theta (Accuracy)");
+            
             float currentTheta = (float)simulation_.getQuadtree().getTheta();
             float oldTheta = currentTheta;
 
-            // Slider Range: 0.0 (More Accurate/Slower) to 2.0 (Less Accurate/Faster)
-            // 0.5 is a common default for Barnes-Hut
-            GuiSlider((Rectangle){ 60, 100, 150, 20 }, "Theta", TextFormat("%.2f", currentTheta), &currentTheta, 0.0f, 2.0f);
+            GuiSlider((Rectangle){ 60, 280, 150, 20 }, "Theta", TextFormat("%.2f", currentTheta), &currentTheta, 0.0f, 2.0f);
             
-            // Only update if changed to avoid unnecessary writes
             if (currentTheta != oldTheta) {
                 simulation_.getQuadtree().setTheta((double)currentTheta);
             }
-
-            // Explanatory Text
-            GuiLabel((Rectangle){ 10, 130, 230, 20 }, "0.0 = Brute Force (Slowest)");
-            GuiLabel((Rectangle){ 10, 150, 230, 20 }, "0.5 = Balanced");
-            GuiLabel((Rectangle){ 10, 170, 230, 20 }, ">1.0 = Fast Approximation");
+            
+            GuiLabel((Rectangle){ 10, 310, 230, 20 }, "0.0 = Brute Force");
+            GuiLabel((Rectangle){ 10, 330, 230, 20 }, "0.5 = Balanced");
         }
         else if(currentTab_ == SidebarTab::INFO) {            
             GuiLabel((Rectangle){ 10, 50, 200, 20 }, "2D Physics Simulator");

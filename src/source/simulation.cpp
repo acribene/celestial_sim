@@ -3,6 +3,7 @@
 #include <cmath>
 #include <random>
 #include <thread>
+#include <iostream>
 
 // Default ctor sets bodies to stl vector default and puts timescale at 1 (real time)
 // Initialize quadtree with theta (default 0.5) and epsilon from constants
@@ -99,6 +100,101 @@ void Simulation::reset()
 {
     m_bodies.clear();
     m_timeScale = 1.0;
+}
+
+void Simulation::saveSimulation(const std::string& filename)
+{
+    std::ofstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Failed to save to " << filename << std::endl;
+        return;
+    }
+
+    // 1. Write the number of bodies (size_t) header
+    size_t count = m_bodies.size();
+    file.write(reinterpret_cast<const char*>(&count), sizeof(size_t));
+
+    // 2. Write the entire vector data block directly
+    // This assumes Body contains no pointers or std::string
+    if (count > 0) {
+        file.write(reinterpret_cast<const char*>(m_bodies.data()), count * sizeof(Body));
+    }
+
+    file.close();
+}
+
+void Simulation::loadSimulation(const std::string& filename)
+{
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Failed to load from " << filename << std::endl;
+        return;
+    }
+
+    reset(); // Clear current simulation
+
+    // 1. Read the header (number of bodies)
+    size_t count = 0;
+    file.read(reinterpret_cast<char*>(&count), sizeof(size_t));
+
+    if (count > 0) {
+        // 2. Resize vector to allocate the exact memory needed
+        // This requires Body to have a default constructor (which your code implies it does)
+        m_bodies.resize(count);
+
+        // 3. Read the data block directly into the vector's memory
+        file.read(reinterpret_cast<char*>(m_bodies.data()), count * sizeof(Body));
+    }
+
+    file.close();
+    
+    // Rebuild quadtree to prevent visual glitches on the first frame
+    Quad boundingQuad = Quad::newContaining(m_bodies);
+    m_quadtree.clear(boundingQuad);
+}
+
+void Simulation::loadPreset(int presetID) 
+{
+    reset(); // Clear existing
+
+    if (presetID == 0) {
+        // PRESET: Solar System (Moved from Application.cpp)
+        
+        // Sun
+        addBody(Body(1.0, 0.08, Vec2(0, 0), Vec2(0, 0), YELLOW));
+        
+        // Mercury
+        double mercury_v = sqrt(1.0 / 0.387) * 2.0 * M_PI;
+        addBody(Body(0.000000166, 0.004, Vec2(0.387, 0), Vec2(0, mercury_v), GRAY));
+        
+        // Venus
+        double venus_v = sqrt(1.0 / 0.723) * 2.0 * M_PI;
+        addBody(Body(0.00000244, 0.009, Vec2(0.723, 0), Vec2(0, venus_v), Color{255, 200, 100, 255}));
+        
+        // Earth
+        double earth_v = sqrt(1.0 / 1.0) * 2.0 * M_PI;
+        addBody(Body(0.000003, 0.01, Vec2(1.0, 0), Vec2(0, earth_v), BLUE));
+        
+        // Mars
+        double mars_v = sqrt(1.0 / 1.524) * 2.0 * M_PI;
+        addBody(Body(0.00000323, 0.006, Vec2(1.524, 0), Vec2(0, mars_v), RED));
+
+        // Jupiter
+        double jupiter_v = sqrt(1.0 / 5.203) * 2.0 * M_PI;
+        addBody(Body(0.000954, 0.05, Vec2(5.203, 0), Vec2(0, jupiter_v), ORANGE));
+
+        // Saturn
+        double saturn_v = sqrt(1.0 / 9.537) * 2.0 * M_PI;
+        addBody(Body(0.000285, 0.045, Vec2(9.537, 0), Vec2(0, saturn_v), Color{210, 180, 140, 255}));
+
+    } else if (presetID == 1) {
+        // PRESET: Protoplanetary Collision
+        generateProPlanetaryDisk(100, Vec2(-10, 0), Vec2(0, 1.49), true);
+        generateProPlanetaryDisk(100, Vec2(10, 0), Vec2(0, -1.49), true);
+    } else if (presetID == 2) {
+        // PRESET: Random Stable Disk
+        generateProPlanetaryDisk(200, Vec2(0,0), Vec2(0,0), true);
+    }
 }
 
 // Set the theta parameter for Barnes-Hut algorithm

@@ -63,6 +63,11 @@ void TimeManager::togglePause()
     m_isPaused = !m_isPaused;
 }
 
+void TimeManager::setPause(bool pause)
+{
+    m_isPaused = pause;
+}
+
 // Adds exactly one fixed delta time to the accumulator. Allows stepping while paused.
 void TimeManager::step() {
     if (m_isPaused) {
