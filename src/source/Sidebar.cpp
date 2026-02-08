@@ -328,3 +328,14 @@ void Sidebar::refreshSaveList() {
         }
     }
 }
+
+void Sidebar::toggleSettings() {
+    if (isOpen_ && currentTab_ == SidebarTab::SETTINGS) {
+        // Already on settings? Close it.
+        isOpen_ = false;
+    } else {
+        // Otherwise, open settings
+        currentTab_ = SidebarTab::SETTINGS;
+        isOpen_ = true;
+    }
+}

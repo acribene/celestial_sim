@@ -19,6 +19,10 @@ void InputHandler::handleSimulationInput(Simulation& simulation) {
 }
 void InputHandler::handleSelection(Sidebar &sidebar, Simulation &sim, const Camera2D &camera, TimeManager& timeMgr)
 {
+    if (IsKeyPressed(KEY_TAB)) {
+        sidebar.toggleSettings();
+    }
+    
     // Mouse Left Click
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         // Check if we clicked the UI first
