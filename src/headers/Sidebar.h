@@ -31,6 +31,18 @@ private:
 
     Body tempBody_ = Body(); // Temporary body for creation tab
 
+    // Save System State
+    std::vector<std::string> saveFiles_;    // List of found files
+    std::string saveFilesListCombined_;     // Required string format for RayGui (e.g. "save1;save2")
+    int selectedSaveIndex_ = -1;            // Which file is selected in the list
+    int listScrollIndex_ = 0;               // Scroll position for the list
+    
+    char saveNameBuffer_[64] = "my_save";   // Input buffer for new save name
+    bool nameEditMode_ = false;             // Is the user typing right now?
+
+    // Helper to scan the "saves" folder
+    void refreshSaveList();
+
 public:
     Sidebar(Simulation& sim, TimeManager& timeMgr);
     
@@ -44,6 +56,7 @@ public:
     void deselect();
     bool isMouseOver(); // Helper to prevent clicking through the UI
     bool hasSelection() const { return selectedBody_ != nullptr; }
+    bool isEditing() const { return nameEditMode_; }
 };
 
 #endif // SIDEBAR_H

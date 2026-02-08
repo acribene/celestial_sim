@@ -1,9 +1,12 @@
 #define RAYGUI_IMPLEMENTATION
 #include "../headers/Sidebar.h"
 #include <iostream>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 Sidebar::Sidebar( Simulation& sim, TimeManager& timeMgr ) : simulation_(sim), timeManager_(timeMgr) {
     bounds_ = { 0, 0, 0, (float)GetScreenHeight() }; // Left side, full height
+    refreshSaveList();
 }
 
 void Sidebar::update(float dt) {
@@ -101,46 +104,102 @@ void Sidebar::render() {
             }
         }
         else if(currentTab_ == SidebarTab::SETTINGS) {
-            // --- SIMULATION CONTROLS ---
-            GuiLabel((Rectangle){ 10, 50, 200, 20 }, "Save / Load");
+            float startY = 50;
+            float padding = 10;
             
-            // Save & Load Buttons
-            if (GuiButton((Rectangle){ 10, 70, 100, 30 }, "Save State")) {
+            // --- 1. QUICK SAVE / LOAD ---
+            GuiLabel((Rectangle){ padding, startY, 200, 20 }, "Quick Options");
+            startY += 20;
+
+            if (GuiButton((Rectangle){ padding, startY, 95, 30 }, "Quick Save")) {
                 simulation_.saveSimulation("quicksave.sim");
             }
-            if (GuiButton((Rectangle){ 120, 70, 100, 30 }, "Load State")) {
+            if (GuiButton((Rectangle){ padding + 105, startY, 95, 30 }, "Quick Load")) {
                 simulation_.loadSimulation("quicksave.sim");
             }
+            startY += 40;
 
-            GuiLabel((Rectangle){ 10, 110, 200, 20 }, "Presets");
+            // --- 2. PRESETS ---
+            GuiLabel((Rectangle){ padding, startY, 200, 20 }, "Presets");
+            startY += 20;
             
-            // Preset Buttons
-            if (GuiButton((Rectangle){ 10, 130, 210, 30 }, "Solar System")) {
+            if (GuiButton((Rectangle){ padding, startY, 200, 25 }, "Solar System")) {
                 simulation_.loadPreset(0);
-                timeManager_.setPause(true); // Pause on load so user can get ready
+                timeManager_.setPause(true);
             }
-            if (GuiButton((Rectangle){ 10, 170, 210, 30 }, "Collision Event")) {
+            startY += 30;
+            
+            if (GuiButton((Rectangle){ padding, startY, 200, 25 }, "Collision Event")) {
                 simulation_.loadPreset(1);
             }
-            if (GuiButton((Rectangle){ 10, 210, 210, 30 }, "Random Disk")) {
+            startY += 30;
+            
+            if (GuiButton((Rectangle){ padding, startY, 200, 25 }, "Random Disk")) {
                 simulation_.loadPreset(2);
             }
+            startY += 35;
 
-            // --- BARNES-HUT THETA ---
-            // Moved down to make room
-            GuiLabel((Rectangle){ 10, 260, 200, 20 }, "Barnes-Hut Theta (Accuracy)");
+            // --- 3. PERSONAL SAVE FILES ---
+            DrawLine(padding, startY, bounds_.width - padding, startY, LIGHTGRAY);
+            startY += 10;
+            GuiLabel((Rectangle){ padding, startY, 200, 20 }, "My Saved Simulations");
+            startY += 20;
+
+            // NEW SAVE INPUT
+            if (GuiTextBox((Rectangle){ padding, startY, 140, 30 }, saveNameBuffer_, 64, nameEditMode_)) {
+                nameEditMode_ = !nameEditMode_;
+            }
             
+            if (GuiButton((Rectangle){ padding + 145, startY, 55, 30 }, "Save")) {
+                std::string fullPath = "saves/" + std::string(saveNameBuffer_) + ".sim";
+                simulation_.saveSimulation(fullPath);
+                refreshSaveList();
+            }
+            startY += 35;
+
+            // FILE LIST
+            GuiListView((Rectangle){ padding, startY, 200, 100 }, saveFilesListCombined_.c_str(), &listScrollIndex_, &selectedSaveIndex_);
+            startY += 110;
+
+            // LOAD / DELETE CONTROLS
+            if (selectedSaveIndex_ >= 0 && selectedSaveIndex_ < saveFiles_.size()) {
+                std::string selectedFile = saveFiles_[selectedSaveIndex_];
+                
+                if (GuiButton((Rectangle){ padding, startY, 95, 30 }, "Load")) {
+                    simulation_.loadSimulation("saves/" + selectedFile + ".sim");
+                }
+
+                if (GuiButton((Rectangle){ padding + 105, startY, 95, 30 }, "Delete")) {
+                    fs::remove("saves/" + selectedFile + ".sim");
+                    refreshSaveList();
+                    selectedSaveIndex_ = -1; 
+                }
+            } else {
+                GuiLabel((Rectangle){ padding, startY, 200, 20 }, "Select a file to load...");
+            }
+            
+            startY += 40;
+            DrawLine(padding, startY, bounds_.width - padding, startY, LIGHTGRAY);
+            startY += 10;
+
+            // --- 4. BARNES-HUT THETA (RESTORED) ---
+            GuiLabel((Rectangle){ padding, startY, 200, 20 }, "Barnes-Hut Accuracy");
+            startY += 20;
+
             float currentTheta = (float)simulation_.getQuadtree().getTheta();
             float oldTheta = currentTheta;
 
-            GuiSlider((Rectangle){ 60, 280, 150, 20 }, "Theta", TextFormat("%.2f", currentTheta), &currentTheta, 0.0f, 2.0f);
+            // Slider: 0.0 (Accurate/Slow) to 2.0 (Fast/Approximate)
+            GuiSlider((Rectangle){ padding + 50, startY, 140, 20 }, "Theta", TextFormat("%.2f", currentTheta), &currentTheta, 0.0f, 2.0f);
             
             if (currentTheta != oldTheta) {
                 simulation_.getQuadtree().setTheta((double)currentTheta);
             }
             
-            GuiLabel((Rectangle){ 10, 310, 230, 20 }, "0.0 = Brute Force");
-            GuiLabel((Rectangle){ 10, 330, 230, 20 }, "0.5 = Balanced");
+            startY += 25;
+            GuiLabel((Rectangle){ padding, startY, 230, 20 }, "0.0 = Brute Force (Slow)");
+            GuiLabel((Rectangle){ padding, startY + 15, 230, 20 }, "0.5 = Balanced");
+            GuiLabel((Rectangle){ padding, startY + 30, 230, 20 }, "1.5+ = Fast / Approximate");
         }
         else if(currentTab_ == SidebarTab::INFO) {            
             GuiLabel((Rectangle){ 10, 50, 200, 20 }, "2D Physics Simulator");
@@ -243,4 +302,29 @@ void Sidebar::deselect() {
 bool Sidebar::isMouseOver() {
     Vector2 mouse = GetMousePosition();
     return CheckCollisionPointRec(mouse, bounds_);
+}
+
+void Sidebar::refreshSaveList() {
+    if (!fs::exists("saves")) {
+        fs::create_directory("saves");
+    }
+
+    saveFiles_.clear();
+    saveFilesListCombined_.clear();
+    
+    // Iterate through files
+    for (const auto& entry : fs::directory_iterator("saves")) {
+        if (entry.path().extension() == ".sim") {
+            // Store just the filename without extension (e.g., "my_save")
+            saveFiles_.push_back(entry.path().stem().string());
+        }
+    }
+
+    // Create semicolon-separated string for RayGui (e.g., "save1;save2;save3")
+    for (size_t i = 0; i < saveFiles_.size(); ++i) {
+        saveFilesListCombined_ += saveFiles_[i];
+        if (i < saveFiles_.size() - 1) {
+            saveFilesListCombined_ += ";";
+        }
+    }
 }

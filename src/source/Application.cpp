@@ -101,9 +101,12 @@ void Application::shutdown()
 
 void Application::processInput()
 {
-    InputHandler::handleTimeScaleInput(timeManager_);
-    InputHandler::handleCameraInput(cameraController_);
-    InputHandler::handleSimulationInput(simulation_);
+    if(!sidebar_.isEditing())
+    {
+        InputHandler::handleTimeScaleInput(timeManager_);
+        InputHandler::handleCameraInput(cameraController_);
+        InputHandler::handleSimulationInput(simulation_);
+    }
     InputHandler::handleSelection(sidebar_, simulation_, cameraController_.getCamera(), timeManager_);
 }
 
