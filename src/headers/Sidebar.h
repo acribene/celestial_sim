@@ -58,7 +58,7 @@ public:
     bool isMouseOver(); // Helper to prevent clicking through the UI
     bool hasSelection() const { return selectedBody_ != nullptr; }
     bool isEditing() const { return nameEditMode_; }
-    void toggleSettings();
+    void toggleInfo();
 };
 
 #endif // SIDEBAR_H

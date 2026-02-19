@@ -238,7 +238,7 @@ void Sidebar::render() {
             currentY += 20;
             GuiLabel((Rectangle){ 10.0f, (float)currentY, 250, 20 }, "* Scroll / A / Z: Zoom");
             currentY += 20;
-            GuiLabel((Rectangle){ 10.0f, (float)currentY, 250, 20 }, "* + / = : Change Time Scale");
+            GuiLabel((Rectangle){ 10.0f, (float)currentY, 250, 20 }, "* + / - : Change Time Scale");
             currentY += 20;
             GuiLabel((Rectangle){ 10.0f, (float)currentY, 250, 20 }, "* Space : Pause / Resume");
             currentY += 20;
@@ -361,13 +361,13 @@ void Sidebar::refreshSaveList() {
     }
 }
 
-void Sidebar::toggleSettings() {
-    if (isOpen_ && currentTab_ == SidebarTab::SETTINGS) {
-        // Already on settings? Close it.
+void Sidebar::toggleInfo() {
+    if (isOpen_ && currentTab_ == SidebarTab::INFO) {
+        // Already on info? Close it.
         isOpen_ = false;
     } else {
         // Otherwise, open settings
-        currentTab_ = SidebarTab::SETTINGS;
+        currentTab_ = SidebarTab::INFO;
         isOpen_ = true;
     }
 }
