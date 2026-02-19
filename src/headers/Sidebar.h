@@ -46,6 +46,7 @@ private:
 public:
     Sidebar(Simulation& sim, TimeManager& timeMgr);
     
+    void applyTheme();
     // Core loop
     void update(float dt);
     void render();

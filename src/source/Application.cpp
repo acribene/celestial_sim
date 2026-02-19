@@ -3,6 +3,7 @@
 
 Application::Application(int width, int height) : isRunning_(false), cameraController_(width, height), timeManager_(TimeManager()), simulation_(Simulation()), sidebar_(simulation_, timeManager_) {
     initialize();
+    sidebar_.applyTheme();
 }
 
 void Application::initialize() {

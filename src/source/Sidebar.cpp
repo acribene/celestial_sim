@@ -9,6 +9,17 @@ Sidebar::Sidebar( Simulation& sim, TimeManager& timeMgr ) : simulation_(sim), ti
     refreshSaveList();
 }
 
+void Sidebar::applyTheme()
+{
+    // Set default text colors to WHITE so they pop against the DARKGRAY background
+    GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
+    GuiSetStyle(DEFAULT, TEXT_COLOR_FOCUSED, ColorToInt(LIGHTGRAY));
+    GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, ColorToInt(GRAY));
+    
+    // Specifically target labels to ensure they are bright white
+    GuiSetStyle(LABEL, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
+}
+
 void Sidebar::update(float dt) {
     float targetWidth = isOpen_ ? expandedWidth_ : 0.0f;
     
@@ -206,18 +217,40 @@ void Sidebar::render() {
             
             GuiLabel((Rectangle){ 10, 80, 200, 20 }, TextFormat("FPS: %d", GetFPS()));
             GuiLabel((Rectangle){ 10, 100, 200, 20 }, TextFormat("Time Scale: %.2f", timeManager_.getTimeScale()));
+            
+            // Time scale explanation
+            GuiLabel((Rectangle){ 10, 120, 250, 20 }, "(1.0 = 1 Earth year per second)");
+
+            int currentY = 150;
 
             if (timeManager_.getPauseState()) { 
-                DrawText("PAUSED", 10, 130, 20, RED);
-                GuiLabel((Rectangle){ 10, 150, 200, 20 }, "(Press ENTER to Step)");
+                DrawText("PAUSED", 10, currentY, 20, RED);
+                currentY += 20;
+                GuiLabel((Rectangle){ 10, (float)currentY, 200, 20 }, "(Press ENTER to Step)");
+                currentY += 30;
+            } else {
+                currentY += 50; // Keeps the control list from jumping up and down when unpaused
             }
 
-            int startY = 200;
-            GuiLabel((Rectangle){ 10.0f, (float)startY, 250, 20 }, "CONTROLS:");
-            GuiLabel((Rectangle){ 10.0f, (float)startY + 25, 250, 20 }, "- Arrow keys: Pan Camera");
-            GuiLabel((Rectangle){ 10.0f, (float)startY + 45, 250, 20 }, "- Scroll / A / Z: Zoom");
-            GuiLabel((Rectangle){ 10.0f, (float)startY + 65, 250, 20 }, "- +/- : Change Time Scale");
-            GuiLabel((Rectangle){ 10.0f, (float)startY + 85, 250, 20 }, "- Space : Pause/Resume");
+            GuiLabel((Rectangle){ 10.0f, (float)currentY, 250, 20 }, "CONTROLS:");
+            currentY += 25;
+            GuiLabel((Rectangle){ 10.0f, (float)currentY, 250, 20 }, "* Arrow keys: Pan Camera");
+            currentY += 20;
+            GuiLabel((Rectangle){ 10.0f, (float)currentY, 250, 20 }, "* Scroll / A / Z: Zoom");
+            currentY += 20;
+            GuiLabel((Rectangle){ 10.0f, (float)currentY, 250, 20 }, "* + / = : Change Time Scale");
+            currentY += 20;
+            GuiLabel((Rectangle){ 10.0f, (float)currentY, 250, 20 }, "* Space : Pause / Resume");
+            currentY += 20;
+            GuiLabel((Rectangle){ 10.0f, (float)currentY, 250, 20 }, "* Enter : Step forward (when paused)");
+            currentY += 20;
+            GuiLabel((Rectangle){ 10.0f, (float)currentY, 250, 20 }, "* T : Toggle Quadtree Wireframe");
+            currentY += 20;
+            GuiLabel((Rectangle){ 10.0f, (float)currentY, 250, 20 }, "* Tab : Toggle Sidebar");
+            currentY += 20;
+            GuiLabel((Rectangle){ 10.0f, (float)currentY, 250, 20 }, "* Left Click Body : Inspect");
+            currentY += 20;
+            GuiLabel((Rectangle){ 10.0f, (float)currentY, 250, 20 }, "* Right Click Sim : Create Body & Pause");
         }
         else if(currentTab_ == SidebarTab::CREATOR) {
            GuiLabel((Rectangle){ 10, 50, 200, 20 }, "Create New Body");
@@ -226,10 +259,9 @@ void Sidebar::render() {
             // --- MASS (Log Scale) ---
             GuiLabel((Rectangle){ 10, 100, 200, 20 }, "Mass (Log Scale)");
             
-            // 1. Get current log value from the real mass
+            // current log value from the real mass
             float currentLogMass = (float)log10(tempBody_.getMass());
             
-            // 2. Draw Slider using the log value
             GuiSlider((Rectangle){ 60, 120, 150, 20 }, "Mass", TextFormat("%.2e Msun", tempBody_.getMass()), &currentLogMass, -8.0f, -4.0f);
             
             // 3. Convert back to real mass and update body
