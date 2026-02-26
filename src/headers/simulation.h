@@ -14,6 +14,10 @@ class Simulation
     std::vector<Body> m_bodies;      // Collection of all celestial bodies in the simulation
     double m_timeScale;              // Time scaling factor for simulation speed
     Quadtree m_quadtree;             // Barnes-Hut quadtree for efficient force calculations
+    
+    // Pre-allocated buffers for O(N) allocation-free spatial hashing
+    std::vector<int> m_hashHead;
+    std::vector<int> m_hashNext;
 
     // Barnes-Hut approximation parameter (lower = more accurate) : 0 becomes brute force, .3 - .5 accurate, 1.0 max value for accuracy,
     // 1.5 if accuracy doesn't matter, any greater than that significant errors occur.

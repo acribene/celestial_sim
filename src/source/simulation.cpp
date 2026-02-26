@@ -327,55 +327,63 @@ Body *Simulation::getBodyAt(Vec2 worldPos)
     return nullptr;
 }
 
-void Simulation::handleCollisions() 
-{
-    // Cell size should be roughly 2-3x the maximum body radius in your simulation
-    // Based on your generateProPlanetaryDisk (0.02 to 0.06 AU), 0.2 AU is extremely safe.
+void Simulation::handleCollisions() {
+    size_t n = m_bodies.size();
+    if (n < 2) return;
+
     const double CELL_SIZE = 0.2; 
     
-    // Hash map to act as our grid
-    std::unordered_map<int64_t, std::vector<Body*>> grid;
+    // Keep the hash table roughly 2x the body count to minimize hash collisions
+    size_t tableSize = n * 2; 
 
-    // 1. Assign every body to a grid cell
-    for (auto& body : m_bodies) {
-        int64_t cx = static_cast<int64_t>(std::floor(body.getPos().getX() / CELL_SIZE));
-        int64_t cy = static_cast<int64_t>(std::floor(body.getPos().getY() / CELL_SIZE));
+    // Resize our persistent buffers only if needed (rarely allocates after frame 1)
+    if (m_hashHead.size() < tableSize) m_hashHead.resize(tableSize);
+    if (m_hashNext.size() < n) m_hashNext.resize(n);
+
+    // Fast clear the head array (compiles down to an ultra-fast memset)
+    std::fill(m_hashHead.begin(), m_hashHead.begin() + tableSize, -1);
+
+    // 1. Hash Pass: Assign bodies to grid cells - O(N)
+    for (size_t i = 0; i < n; ++i) {
+        int64_t cx = static_cast<int64_t>(std::floor(m_bodies[i].getPos().getX() / CELL_SIZE));
+        int64_t cy = static_cast<int64_t>(std::floor(m_bodies[i].getPos().getY() / CELL_SIZE));
         
-        // Bitwise trick to safely combine two 32-bit coordinates into a single 64-bit key
-        int64_t key = (static_cast<uint64_t>(static_cast<uint32_t>(cx)) << 32) | static_cast<uint32_t>(cy);
-        grid[key].push_back(&body);
+        // Fast prime-multiplication hash
+        uint32_t hash = (static_cast<uint32_t>(cx) * 73856093 ^ static_cast<uint32_t>(cy) * 19349663) % tableSize;
+
+        // Insert into the linked list for this hash bucket
+        m_hashNext[i] = m_hashHead[hash];
+        m_hashHead[hash] = static_cast<int>(i);
     }
 
-    // 2. Check for collisions inside the cells
-    // The relative neighbor offsets to check (Self, Right, Bottom-Right, Bottom, Bottom-Left)
-    // We only check half the neighbors to avoid double-resolving collisions
-    const int neighborOffsets[5][2] = {
-        {0, 0}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}
-    };
+    // 2. Resolve Pass: Check neighbor cells - O(N)
+    // We only check Self, Right, Bottom-Right, Bottom, Bottom-Left to avoid duplicate checks
+    const int neighborOffsets[5][2] = {{0, 0}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}};
 
-    for (const auto& [key, cellBodies] : grid) {
-        int32_t cx = static_cast<int32_t>(key >> 32);
-        int32_t cy = static_cast<int32_t>(key & 0xFFFFFFFF);
+    for (size_t i = 0; i < n; ++i) {
+        int64_t cx = static_cast<int64_t>(std::floor(m_bodies[i].getPos().getX() / CELL_SIZE));
+        int64_t cy = static_cast<int64_t>(std::floor(m_bodies[i].getPos().getY() / CELL_SIZE));
 
-        for (int i = 0; i < 5; ++i) {
-            int64_t neighborX = cx + neighborOffsets[i][0];
-            int64_t neighborY = cy + neighborOffsets[i][1];
-            int64_t neighborKey = (static_cast<uint64_t>(static_cast<uint32_t>(neighborX)) << 32) | static_cast<uint32_t>(neighborY);
+        for (int offset = 0; offset < 5; ++offset) {
+            int64_t nx = cx + neighborOffsets[offset][0];
+            int64_t ny = cy + neighborOffsets[offset][1];
+            
+            uint32_t neighborHash = (static_cast<uint32_t>(nx) * 73856093 ^ static_cast<uint32_t>(ny) * 19349663) % tableSize;
+            
+            int j = m_hashHead[neighborHash];
+            while (j != -1) {
+                // Ensure the hash bucket actually corresponds to the correct spatial cell
+                int64_t jx = static_cast<int64_t>(std::floor(m_bodies[j].getPos().getX() / CELL_SIZE));
+                int64_t jy = static_cast<int64_t>(std::floor(m_bodies[j].getPos().getY() / CELL_SIZE));
 
-            auto neighborIt = grid.find(neighborKey);
-            if (neighborIt != grid.end()) {
-                const auto& neighborBodies = neighborIt->second;
-
-                // Compare bodies
-                for (Body* b1 : cellBodies) {
-                    for (Body* b2 : neighborBodies) {
-                        // Prevent checking a body against itself, and prevent double checks 
-                        // by only proceeding if b1's memory address is strictly less than b2's
-                        if (b1 < b2) {
-                            resolveCollision(*b1, *b2, 0.5); // 0.5 restitution
-                        }
+                if (jx == nx && jy == ny) {
+                    // Prevent duplicate checks. If checking the same cell (offset 0), only check j > i.
+                    if (offset != 0 || j > static_cast<int>(i)) {
+                        resolveCollision(m_bodies[i], m_bodies[j], 0.5);
                     }
                 }
+                // Move to the next body in this bucket
+                j = m_hashNext[j];
             }
         }
     }
@@ -392,8 +400,10 @@ void Simulation::resolveCollision(Body& b1, Body& b2, double restitution) {
     double dist = std::sqrt(distSq);
     Vec2 normal = delta / dist;
 
-    // 1. Positional Correction (with "slop")
+    // 1. Positional Correction (with "slop" and relaxation)
     const double ALLOWED_PENETRATION = 0.01; 
+    const double POSITIONAL_PERCENT = 0.8; // NEW: Only resolve 80% of the overlap
+    
     double overlap = radiusSum - dist;
     
     if (overlap > ALLOWED_PENETRATION) {
@@ -401,20 +411,25 @@ void Simulation::resolveCollision(Body& b1, Body& b2, double restitution) {
         double m1Ratio = b2.getMass() / totalMass;
         double m2Ratio = b1.getMass() / totalMass;
 
-        b1.setPos(b1.getPos() + normal * (overlap * m1Ratio));
-        b2.setPos(b2.getPos() - normal * (overlap * m2Ratio));
+        // Multiply the correction by our new percentage
+        b1.setPos(b1.getPos() + normal * (overlap * m1Ratio * POSITIONAL_PERCENT));
+        b2.setPos(b2.getPos() - normal * (overlap * m2Ratio * POSITIONAL_PERCENT));
     }
 
     // 2. Velocity Resolution (Normal Impulse)
     Vec2 relVel = b1.getVel() - b2.getVel();
     double velAlongNormal = relVel.dot(normal);
 
+    // If velocities are separating, don't resolve
     if (velAlongNormal > 0) return; 
 
-    const double RESTING_THRESHOLD = 0.1; 
+    // INCREASED: A higher threshold aggressively kills kinetic energy 
+    // for objects caught in strong gravity wells.
+    const double RESTING_THRESHOLD = 1.0; 
+    
     double actualRestitution = restitution;
     if (std::abs(velAlongNormal) < RESTING_THRESHOLD) {
-        actualRestitution = 0.0; 
+        actualRestitution = 0.0; // Force a dead stop
     }
 
     double j = -(1.0 + actualRestitution) * velAlongNormal;
