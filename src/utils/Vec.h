@@ -71,6 +71,11 @@ class Vec2
         return Vec2(x / magnitude, y / magnitude);
     }
 
+    // Add this right below your operator/ function
+    inline double dot(const Vec2& rhs) const {
+        return x * rhs.x + y * rhs.y;
+    }
+    
     // Getters
 
     inline double getX() const {

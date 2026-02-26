@@ -3,6 +3,7 @@
 #include <cmath>
 #include <random>
 #include <thread>
+#include <unordered_map>
 #include <iostream>
 
 // Default ctor sets bodies to stl vector default and puts timescale at 1 (real time)
@@ -36,6 +37,7 @@ void Simulation::update(years_t deltaT)
         body.drift(deltaT);
     }
 
+    handleCollisions();
     // 3. Build Barnes-Hut quadtree and compute accelerations
     
     // Create quad containing all bodies
@@ -323,4 +325,132 @@ Body *Simulation::getBodyAt(Vec2 worldPos)
         }
     }
     return nullptr;
+}
+
+void Simulation::handleCollisions() 
+{
+    // Cell size should be roughly 2-3x the maximum body radius in your simulation
+    // Based on your generateProPlanetaryDisk (0.02 to 0.06 AU), 0.2 AU is extremely safe.
+    const double CELL_SIZE = 0.2; 
+    
+    // Hash map to act as our grid
+    std::unordered_map<int64_t, std::vector<Body*>> grid;
+
+    // 1. Assign every body to a grid cell
+    for (auto& body : m_bodies) {
+        int64_t cx = static_cast<int64_t>(std::floor(body.getPos().getX() / CELL_SIZE));
+        int64_t cy = static_cast<int64_t>(std::floor(body.getPos().getY() / CELL_SIZE));
+        
+        // Bitwise trick to safely combine two 32-bit coordinates into a single 64-bit key
+        int64_t key = (static_cast<uint64_t>(static_cast<uint32_t>(cx)) << 32) | static_cast<uint32_t>(cy);
+        grid[key].push_back(&body);
+    }
+
+    // 2. Check for collisions inside the cells
+    // The relative neighbor offsets to check (Self, Right, Bottom-Right, Bottom, Bottom-Left)
+    // We only check half the neighbors to avoid double-resolving collisions
+    const int neighborOffsets[5][2] = {
+        {0, 0}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}
+    };
+
+    for (const auto& [key, cellBodies] : grid) {
+        int32_t cx = static_cast<int32_t>(key >> 32);
+        int32_t cy = static_cast<int32_t>(key & 0xFFFFFFFF);
+
+        for (int i = 0; i < 5; ++i) {
+            int64_t neighborX = cx + neighborOffsets[i][0];
+            int64_t neighborY = cy + neighborOffsets[i][1];
+            int64_t neighborKey = (static_cast<uint64_t>(static_cast<uint32_t>(neighborX)) << 32) | static_cast<uint32_t>(neighborY);
+
+            auto neighborIt = grid.find(neighborKey);
+            if (neighborIt != grid.end()) {
+                const auto& neighborBodies = neighborIt->second;
+
+                // Compare bodies
+                for (Body* b1 : cellBodies) {
+                    for (Body* b2 : neighborBodies) {
+                        // Prevent checking a body against itself, and prevent double checks 
+                        // by only proceeding if b1's memory address is strictly less than b2's
+                        if (b1 < b2) {
+                            resolveCollision(*b1, *b2, 0.5); // 0.5 restitution
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void Simulation::resolveCollision(Body& b1, Body& b2, double restitution) {
+    Vec2 delta = b1.getPos() - b2.getPos();
+    double distSq = delta.magSqrd();
+    double radiusSum = b1.getRadius() + b2.getRadius();
+
+    // Check if they are overlapping
+    if (distSq >= radiusSum * radiusSum || distSq == 0.0) return; 
+
+    double dist = std::sqrt(distSq);
+    Vec2 normal = delta / dist;
+
+    // 1. Positional Correction (with "slop")
+    const double ALLOWED_PENETRATION = 0.01; 
+    double overlap = radiusSum - dist;
+    
+    if (overlap > ALLOWED_PENETRATION) {
+        double totalMass = b1.getMass() + b2.getMass();
+        double m1Ratio = b2.getMass() / totalMass;
+        double m2Ratio = b1.getMass() / totalMass;
+
+        b1.setPos(b1.getPos() + normal * (overlap * m1Ratio));
+        b2.setPos(b2.getPos() - normal * (overlap * m2Ratio));
+    }
+
+    // 2. Velocity Resolution (Normal Impulse)
+    Vec2 relVel = b1.getVel() - b2.getVel();
+    double velAlongNormal = relVel.dot(normal);
+
+    if (velAlongNormal > 0) return; 
+
+    const double RESTING_THRESHOLD = 0.1; 
+    double actualRestitution = restitution;
+    if (std::abs(velAlongNormal) < RESTING_THRESHOLD) {
+        actualRestitution = 0.0; 
+    }
+
+    double j = -(1.0 + actualRestitution) * velAlongNormal;
+    j /= (1.0 / b1.getMass() + 1.0 / b2.getMass());
+
+    Vec2 normalImpulse = normal * j;
+    
+    b1.setVel(b1.getVel() + normalImpulse / b1.getMass());
+    b2.setVel(b2.getVel() - normalImpulse / b2.getMass());
+
+    // 3. Friction (Tangential Impulse)
+    // In 2D, the tangent is perpendicular to the normal. If normal is (x, y), tangent is (-y, x).
+    Vec2 tangent(-normal.getY(), normal.getX());
+    
+    // Recalculate relative velocity after the normal impulse was applied
+    Vec2 newRelVel = b1.getVel() - b2.getVel();
+    double velAlongTangent = newRelVel.dot(tangent);
+    
+    // Calculate the tangential impulse scalar
+    double jt = -velAlongTangent;
+    jt /= (1.0 / b1.getMass() + 1.0 / b2.getMass());
+    
+    // Coulomb friction law: friction is proportional to the normal force (impulse)
+    const double FRICTION_COEFFICIENT = 0.5; // 0.0 = ice, 1.0+ = very sticky
+    double maxFriction = std::abs(j) * FRICTION_COEFFICIENT;
+    
+    // Clamp the tangential impulse so it doesn't exceed static friction
+    if (jt > maxFriction) {
+        jt = maxFriction;
+    } else if (jt < -maxFriction) {
+        jt = -maxFriction;
+    }
+    
+    Vec2 frictionImpulse = tangent * jt;
+    
+    // Apply friction impulse
+    b1.setVel(b1.getVel() + frictionImpulse / b1.getMass());
+    b2.setVel(b2.getVel() - frictionImpulse / b2.getMass());
 }
