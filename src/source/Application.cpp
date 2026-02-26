@@ -10,7 +10,7 @@ void Application::initialize() {
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "2D Physics Simulator");
     SetTargetFPS(60);
     
-    simulation_.loadPreset(0); // Load solar system preset
+    simulation_.loadPreset(0, -1); // Load solar system preset, -1 for normal solar system
     isRunning_ = true;
 }
 

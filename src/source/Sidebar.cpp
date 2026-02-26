@@ -133,6 +133,10 @@ void Sidebar::render() {
             // --- 2. PRESETS ---
             GuiLabel((Rectangle){ padding, startY, 200, 20 }, "Presets");
             startY += 20;
+
+            GuiLabel((Rectangle){ padding, startY, 100, 20 }, "Number of Bodies");
+            GuiSlider((Rectangle){ padding + 100, startY, 90, 20 }, "", TextFormat("%d", (int)presetBodyCount_), &presetBodyCount_, 10.0f, 1000.0f);
+            startY += 30;
             
             if (GuiButton((Rectangle){ padding, startY, 200, 25 }, "Solar System")) {
                 simulation_.loadPreset(0);
@@ -141,12 +145,12 @@ void Sidebar::render() {
             startY += 30;
             
             if (GuiButton((Rectangle){ padding, startY, 200, 25 }, "Collision Event")) {
-                simulation_.loadPreset(1);
+                simulation_.loadPreset(1, (int)presetBodyCount_);
             }
             startY += 30;
             
             if (GuiButton((Rectangle){ padding, startY, 200, 25 }, "Random Disk")) {
-                simulation_.loadPreset(2);
+                simulation_.loadPreset(2, (int)presetBodyCount_);
             }
             startY += 35;
 

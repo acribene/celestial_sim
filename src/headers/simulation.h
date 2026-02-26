@@ -45,7 +45,7 @@ class Simulation
     // Saving and loading simulation state.
     void saveSimulation(const std::string& filename);
     void loadSimulation(const std::string& filename);
-    void loadPreset(int preset);
+    void loadPreset(int preset, int numBodies = -1);
 
     void setTheta(double theta);
     double getTheta() const { return m_theta; }

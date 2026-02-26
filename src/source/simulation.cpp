@@ -153,7 +153,7 @@ void Simulation::loadSimulation(const std::string& filename)
     m_quadtree.clear(boundingQuad);
 }
 
-void Simulation::loadPreset(int presetID) 
+void Simulation::loadPreset(int presetID, int numBodies) 
 {
     reset(); // Clear existing
 
@@ -189,11 +189,11 @@ void Simulation::loadPreset(int presetID)
 
     } else if (presetID == 1) {
         // PRESET: Protoplanetary Collision
-        generateProPlanetaryDisk(100, Vec2(-10, 0), Vec2(0, 1.49), true);
-        generateProPlanetaryDisk(100, Vec2(10, 0), Vec2(0, -1.49), true);
+        generateProPlanetaryDisk(numBodies / 2, Vec2(-10, 0), Vec2(0, 1.49), true);
+        generateProPlanetaryDisk(numBodies / 2 , Vec2(10, 0), Vec2(0, -1.49), true);
     } else if (presetID == 2) {
         // PRESET: Random Stable Disk
-        generateProPlanetaryDisk(200, Vec2(0,0), Vec2(0,0), true);
+        generateProPlanetaryDisk(numBodies, Vec2(0,0), Vec2(0,0), true);
     }
 }
 

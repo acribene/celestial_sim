@@ -30,6 +30,7 @@ private:
     TimeManager& timeManager_;
 
     Body tempBody_ = Body(); // Temporary body for creation tab
+    float presetBodyCount_ = {100};
 
     // Save System State
     std::vector<std::string> saveFiles_;    // List of found files
