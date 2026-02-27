@@ -37,8 +37,12 @@ class Simulation
     Simulation& operator=(const Simulation& rhs) = delete;
     Simulation& operator=(Simulation&& rhs) = delete;
 
+    // Methods for collisions
     void handleCollisions();
     void resolveCollision(Body& b1, Body& b2, double restitution = 0.5);
+    double calculateTotalEnergy() const;
+
+    // General Physics
     void update(years_t deltaT);
     Body* addBody(Body body);
     void render();

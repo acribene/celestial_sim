@@ -469,3 +469,27 @@ void Simulation::resolveCollision(Body& b1, Body& b2, double restitution) {
     b1.setVel(b1.getVel() + frictionImpulse / b1.getMass());
     b2.setVel(b2.getVel() - frictionImpulse / b2.getMass());
 }
+
+double Simulation::calculateTotalEnergy() const {
+    double kineticEnergy = 0.0;
+    double potentialEnergy = 0.0;
+    size_t n = m_bodies.size();
+
+    // 1. Calculate Total Kinetic Energy
+    for (const auto& body : m_bodies) {
+        double vSq = body.getVel().magSqrd(); // Using your Vec2 magSqrd method
+        kineticEnergy += 0.5 * body.getMass() * vSq;
+    }
+
+    // 2. Calculate Total Potential Energy 
+    for (size_t i = 0; i < n; ++i) {
+        for (size_t j = i + 1; j < n; ++j) {
+            Vec2 delta = m_bodies[i].getPos() - m_bodies[j].getPos();
+            // Add your SOFTENING constant to prevent division by zero near impacts
+            double dist = std::sqrt(delta.magSqrd() + SOFTENING); 
+            potentialEnergy -= (GC * m_bodies[i].getMass() * m_bodies[j].getMass()) / dist;
+        }
+    }
+
+    return kineticEnergy + potentialEnergy;
+}
