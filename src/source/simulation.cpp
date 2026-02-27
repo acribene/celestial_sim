@@ -477,7 +477,7 @@ double Simulation::calculateTotalEnergy() const {
 
     // 1. Calculate Total Kinetic Energy
     for (const auto& body : m_bodies) {
-        double vSq = body.getVel().magSqrd(); // Using your Vec2 magSqrd method
+        double vSq = body.getVel().magSqrd();
         kineticEnergy += 0.5 * body.getMass() * vSq;
     }
 
@@ -485,7 +485,6 @@ double Simulation::calculateTotalEnergy() const {
     for (size_t i = 0; i < n; ++i) {
         for (size_t j = i + 1; j < n; ++j) {
             Vec2 delta = m_bodies[i].getPos() - m_bodies[j].getPos();
-            // Add your SOFTENING constant to prevent division by zero near impacts
             double dist = std::sqrt(delta.magSqrd() + SOFTENING); 
             potentialEnergy -= (GC * m_bodies[i].getMass() * m_bodies[j].getMass()) / dist;
         }
