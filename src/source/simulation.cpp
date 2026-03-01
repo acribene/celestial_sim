@@ -5,6 +5,7 @@
 #include <thread>
 #include <unordered_map>
 #include <iostream>
+#include <cstdlib>
 
 // Default ctor sets bodies to stl vector default and puts timescale at 1 (real time)
 // Initialize quadtree with theta (default 0.5) and epsilon from constants
@@ -23,6 +24,20 @@ Simulation::Simulation(double theta)
 void Simulation::update(years_t deltaT)
 {
     if (m_bodies.empty()) return;
+
+    // Track total simulation time and time since we last logged
+    m_totalTime += deltaT.count();
+    m_timeSinceLastLog += deltaT.count();
+
+    // Log the energy if we've passed the threshold
+    if (m_timeSinceLastLog >= LOG_INTERVAL) {
+        if (m_energyLog.is_open()) {
+            m_energyLog << m_totalTime << "," << calculateTotalEnergy() << "\n";
+            std::system("cls");
+            std::cout << m_totalTime << std::endl;
+        }
+        m_timeSinceLastLog = 0.0; // Reset the timer
+    }
 
     // Leapfrog (kick-drift-kick) integrator with Barnes-Hut force calculation
     years_t half_dt = deltaT / 2.0;
@@ -157,6 +172,26 @@ void Simulation::loadSimulation(const std::string& filename)
 
 void Simulation::loadPreset(int presetID, int numBodies) 
 {
+    // ENERGY LOGGING
+
+    // Close existing log if one is running
+    if (m_energyLog.is_open()) {
+        m_energyLog.close();
+    }
+    
+    // Reset timers for the new scenario
+    m_totalTime = 0.0;
+    m_timeSinceLastLog = 0.0;
+
+    // Create a unique file for this preset
+    std::string filename = "energy_log_preset_PRES" + std::to_string(presetID) + "BOD#" + std::to_string(numBodies) + ".csv";
+    m_energyLog.open(filename);
+    if (m_energyLog.is_open()) {
+        m_energyLog << "Time,TotalEnergy\n";
+    }
+
+    // ENERGY LOGGING
+
     reset(); // Clear existing
 
     if (presetID == 0) {
