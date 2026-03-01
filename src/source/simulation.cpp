@@ -20,14 +20,91 @@ Simulation::Simulation(double theta)
 {
 }
 
-// Updates all the forces on all bodies in the simulation using Barnes-Hut algorithm
+// LEAPFROG
+// void Simulation::update(years_t deltaT)
+// {
+//     if (m_bodies.empty()) return;
+
+//     // Track total simulation time and time since we last logged
+//     m_totalTime += deltaT.count();
+//     m_timeSinceLastLog += deltaT.count();
+
+//     // Log the energy if we've passed the threshold
+//     if (m_timeSinceLastLog >= LOG_INTERVAL) {
+//         if (m_energyLog.is_open()) {
+//             m_energyLog << m_totalTime << "," << calculateTotalEnergy() << "\n";
+//             std::system("cls");
+//             std::cout << m_totalTime << std::endl;
+//         }
+//         m_timeSinceLastLog = 0.0; // Reset the timer
+//     }
+
+//     // Leapfrog (kick-drift-kick) integrator with Barnes-Hut force calculation
+//     years_t half_dt = deltaT / 2.0;
+
+//     // 1. Kick: update velocity by half-step using current acceleration
+//     for (auto& body : m_bodies) {
+//         body.kick(half_dt);
+//     }
+
+//     // 2. Drift: update position by full-step using new velocity
+//     for (auto& body : m_bodies) {
+//         body.drift(deltaT);
+//     }
+
+//     handleCollisions();
+//     // 3. Build Barnes-Hut quadtree and compute accelerations
+    
+//     // Create quad containing all bodies
+//     Quad boundingQuad = Quad::newContaining(m_bodies);
+//     m_quadtree.reserve(m_bodies.size());
+//     m_quadtree.clear(boundingQuad);
+    
+//     // Insert all bodies into quadtree
+//     for (const auto& body : m_bodies) {
+//         m_quadtree.insert(body.getPos(), body.getMass());
+//     }
+    
+//     // Propagate mass and center of mass up the tree
+//     m_quadtree.propagate();
+    
+//     // Calculate accelerations using quadtree with thread pool
+//     size_t bodiesPerThread = (m_bodies.size() + m_threadCount - 1) / m_threadCount;
+    
+//     for (size_t t = 0; t < m_threadCount; ++t) {
+//         size_t start = t * bodiesPerThread;
+//         size_t end = std::min(start + bodiesPerThread, m_bodies.size());
+        
+//         if (start >= m_bodies.size()) break;
+        
+//         m_threadPool.enqueue([this, start, end]() {
+//             for (size_t i = start; i < end; ++i) {
+//                 m_bodies[i].setAcc(Vec2(0, 0));
+//                 Vec2 acceleration = m_quadtree.acc(m_bodies[i].getPos());
+//                 m_bodies[i].setAcc(acceleration);
+//             }
+//         });
+//     }
+    
+//     // Wait for all tasks to complete
+//     m_threadPool.wait();
+
+//     // 4. Kick: update velocity by another half-step using new acceleration
+//     for (auto& body : m_bodies) {
+//         body.kick(half_dt);
+//     }
+// }
+
+// RK4
 void Simulation::update(years_t deltaT)
 {
     if (m_bodies.empty()) return;
 
+    double dt = deltaT.count();
+
     // Track total simulation time and time since we last logged
-    m_totalTime += deltaT.count();
-    m_timeSinceLastLog += deltaT.count();
+    m_totalTime += dt;
+    m_timeSinceLastLog += dt;
 
     // Log the energy if we've passed the threshold
     if (m_timeSinceLastLog >= LOG_INTERVAL) {
@@ -39,60 +116,82 @@ void Simulation::update(years_t deltaT)
         m_timeSinceLastLog = 0.0; // Reset the timer
     }
 
-    // Leapfrog (kick-drift-kick) integrator with Barnes-Hut force calculation
-    years_t half_dt = deltaT / 2.0;
+    size_t n = m_bodies.size();
 
-    // 1. Kick: update velocity by half-step using current acceleration
-    for (auto& body : m_bodies) {
-        body.kick(half_dt);
+    // Store initial positions and velocities
+    std::vector<Vec2> initP(n), initV(n);
+    for (size_t i = 0; i < n; ++i) {
+        initP[i] = m_bodies[i].getPos();
+        initV[i] = m_bodies[i].getVel();
     }
 
-    // 2. Drift: update position by full-step using new velocity
-    for (auto& body : m_bodies) {
-        body.drift(deltaT);
+    // Helper lambda to rebuild the tree and calculate accelerations at current body positions
+    auto computeAccelerations = [&](std::vector<Vec2>& outAcc) {
+        Quad boundingQuad = Quad::newContaining(m_bodies);
+        m_quadtree.reserve(n);
+        m_quadtree.clear(boundingQuad);
+        
+        for (const auto& body : m_bodies) {
+            m_quadtree.insert(body.getPos(), body.getMass());
+        }
+        m_quadtree.propagate();
+
+        size_t bodiesPerThread = (n + m_threadCount - 1) / m_threadCount;
+        
+        for (size_t t = 0; t < m_threadCount; ++t) {
+            size_t start = t * bodiesPerThread;
+            size_t end = std::min(start + bodiesPerThread, n);
+            if (start >= n) break;
+            
+            m_threadPool.enqueue([this, start, end, &outAcc]() {
+                for (size_t i = start; i < end; ++i) {
+                    outAcc[i] = m_quadtree.acc(m_bodies[i].getPos());
+                }
+            });
+        }
+        m_threadPool.wait();
+    };
+
+    std::vector<Vec2> k1a(n), k2a(n), k3a(n), k4a(n);
+    std::vector<Vec2> k1v = initV; 
+
+    // --- 1. Evaluate k1 (Initial State) ---
+    computeAccelerations(k1a);
+
+    // --- 2. Evaluate k2 (Half Step) ---
+    std::vector<Vec2> k2v(n);
+    for (size_t i = 0; i < n; ++i) {
+        m_bodies[i].setPos(initP[i] + k1v[i] * (dt / 2.0));
+        k2v[i] = initV[i] + k1a[i] * (dt / 2.0);
+    }
+    computeAccelerations(k2a);
+
+    // --- 3. Evaluate k3 (Half Step) ---
+    std::vector<Vec2> k3v(n);
+    for (size_t i = 0; i < n; ++i) {
+        m_bodies[i].setPos(initP[i] + k2v[i] * (dt / 2.0));
+        k3v[i] = initV[i] + k2a[i] * (dt / 2.0);
+    }
+    computeAccelerations(k3a);
+
+    // --- 4. Evaluate k4 (Full Step) ---
+    std::vector<Vec2> k4v(n);
+    for (size_t i = 0; i < n; ++i) {
+        m_bodies[i].setPos(initP[i] + k3v[i] * dt);
+        k4v[i] = initV[i] + k3a[i] * dt;
+    }
+    computeAccelerations(k4a);
+
+    // --- 5. Final Integration ---
+    for (size_t i = 0; i < n; ++i) {
+        Vec2 finalP = initP[i] + (k1v[i] + k2v[i]*2.0 + k3v[i]*2.0 + k4v[i]) * (dt / 6.0);
+        Vec2 finalV = initV[i] + (k1a[i] + k2a[i]*2.0 + k3a[i]*2.0 + k4a[i]) * (dt / 6.0);
+        
+        m_bodies[i].setPos(finalP);
+        m_bodies[i].setVel(finalV);
     }
 
     handleCollisions();
-    // 3. Build Barnes-Hut quadtree and compute accelerations
-    
-    // Create quad containing all bodies
-    Quad boundingQuad = Quad::newContaining(m_bodies);
-    m_quadtree.reserve(m_bodies.size());
-    m_quadtree.clear(boundingQuad);
-    
-    // Insert all bodies into quadtree
-    for (const auto& body : m_bodies) {
-        m_quadtree.insert(body.getPos(), body.getMass());
-    }
-    
-    // Propagate mass and center of mass up the tree
-    m_quadtree.propagate();
-    
-    // Calculate accelerations using quadtree with thread pool
-    size_t bodiesPerThread = (m_bodies.size() + m_threadCount - 1) / m_threadCount;
-    
-    for (size_t t = 0; t < m_threadCount; ++t) {
-        size_t start = t * bodiesPerThread;
-        size_t end = std::min(start + bodiesPerThread, m_bodies.size());
-        
-        if (start >= m_bodies.size()) break;
-        
-        m_threadPool.enqueue([this, start, end]() {
-            for (size_t i = start; i < end; ++i) {
-                m_bodies[i].setAcc(Vec2(0, 0));
-                Vec2 acceleration = m_quadtree.acc(m_bodies[i].getPos());
-                m_bodies[i].setAcc(acceleration);
-            }
-        });
-    }
-    
-    // Wait for all tasks to complete
-    m_threadPool.wait();
-
-    // 4. Kick: update velocity by another half-step using new acceleration
-    for (auto& body : m_bodies) {
-        body.kick(half_dt);
-    }
 }
 
 // Adds body to simulation
