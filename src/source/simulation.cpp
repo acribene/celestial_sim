@@ -283,7 +283,8 @@ void Simulation::loadPreset(int presetID, int numBodies)
     m_timeSinceLastLog = 0.0;
 
     // Create a unique file for this preset
-    std::string filename = "energy_log_preset_PRES" + std::to_string(presetID) + "BOD#" + std::to_string(numBodies) + ".csv";
+    //std::string filename = "energy_log_preset_PRES" + std::to_string(presetID) + "BOD#" + std::to_string(numBodies) + ".csv";
+    std::string filename = "earth_stress_test_LF.csv";
     m_energyLog.open(filename);
     if (m_energyLog.is_open()) {
         m_energyLog << "Time,TotalEnergy\n";

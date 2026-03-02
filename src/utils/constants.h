@@ -12,7 +12,8 @@ const double SECONDS_PER_MINUTE = 60.0;
 
 const constexpr double GC = (4.0 * M_PI * M_PI); // Gravitational constant
 const double SOFTENING = 1e-10; // Softening parameter to avoid division by zero
-const constexpr double TIME_STEP = (1.0 / (365.25 * 100.0)); // 0.01 days in years for stability
+//const constexpr double TIME_STEP = (1.0 / (365.25 * 100.0)); // 0.01 days in years for stability
+const constexpr double TIME_STEP = (5.0 / 365.25);
 
 const int WINDOW_WIDTH = 1920;
 const int WINDOW_HEIGHT = 1080;
