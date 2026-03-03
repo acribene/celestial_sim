@@ -31,9 +31,10 @@ class Simulation
     std::ofstream m_energyLog;
     double m_totalTime = 0.0;
     double m_timeSinceLastLog = 0.0;
+    double m_totalHeatEnergy = 0.0;
     
     // 0.1 means it logs once every 0.1 simulated years.
-    const double LOG_INTERVAL = 1.0;
+    const double LOG_INTERVAL = .1;
 
     public:
     Simulation( double theta = 0.5 );

@@ -32,7 +32,7 @@ void Simulation::update(years_t deltaT)
     // Log the energy if we've passed the threshold
     if (m_timeSinceLastLog >= LOG_INTERVAL) {
         if (m_energyLog.is_open()) {
-            m_energyLog << m_totalTime << "," << calculateTotalEnergy() << "\n";
+            m_energyLog << m_totalTime << "," << calculateTotalEnergy() << "," << m_totalHeatEnergy << "\n";
             std::system("cls");
             std::cout << m_totalTime << std::endl;
         }
@@ -52,7 +52,16 @@ void Simulation::update(years_t deltaT)
         body.drift(deltaT);
     }
 
-    handleCollisions();
+    double preCollisionEnergy = calculateTotalEnergy();
+
+    handleCollisions(); //
+
+    // ---> NEW: Snapshot global energy AFTER collisions
+    double postCollisionEnergy = calculateTotalEnergy();
+
+    // Track the absolute exact energy converted into Heat / Work
+    m_totalHeatEnergy += (preCollisionEnergy - postCollisionEnergy);
+
     // 3. Build Barnes-Hut quadtree and compute accelerations
     
     // Create quad containing all bodies
@@ -281,13 +290,14 @@ void Simulation::loadPreset(int presetID, int numBodies)
     // Reset timers for the new scenario
     m_totalTime = 0.0;
     m_timeSinceLastLog = 0.0;
+    m_totalHeatEnergy = 0.0;
 
     // Create a unique file for this preset
-    //std::string filename = "energy_log_preset_PRES" + std::to_string(presetID) + "BOD#" + std::to_string(numBodies) + ".csv";
-    std::string filename = "earth_stress_test_LF.csv";
+    std::string filename = "energy_log_preset_PRES" + std::to_string(presetID) + "BOD#" + std::to_string(numBodies) + ".csv";
+    //std::string filename = "earth_stress_test_LF.csv";
     m_energyLog.open(filename);
     if (m_energyLog.is_open()) {
-        m_energyLog << "Time,TotalEnergy\n";
+        m_energyLog << "Time,TotalEnergy,HeatEnergy\n";
     }
 
     // ENERGY LOGGING
@@ -326,8 +336,33 @@ void Simulation::loadPreset(int presetID, int numBodies)
 
     } else if (presetID == 1) {
         // PRESET: Protoplanetary Collision
-        generateProPlanetaryDisk(numBodies / 2, Vec2(-10, 0), Vec2(0, 1.49), true);
-        generateProPlanetaryDisk(numBodies / 2 , Vec2(10, 0), Vec2(0, -1.49), true);
+        // generateProPlanetaryDisk(numBodies / 2, Vec2(-10, 0), Vec2(0, 1.49), true);
+        // generateProPlanetaryDisk(numBodies / 2 , Vec2(10, 0), Vec2(0, -1.49), true);
+
+        int count = (numBodies > 0) ? numBodies : 50; 
+        
+        for (int i = 0; i < count; ++i) {
+            Body b;
+            
+            // 1. Position: Randomly scatter them within a tight 2.0 AU circle
+            double angle = ((double)std::rand() / RAND_MAX) * 2.0 * M_PI;
+            double distance = ((double)std::rand() / RAND_MAX) * 2.0; 
+            
+            b.setPos(Vec2(distance * std::cos(angle), distance * std::sin(angle)));
+            
+            // 2. Velocity: Zero. Let gravity do all the work to pull them into a pileup.
+            b.setVel(Vec2(0.0, 0.0));
+            
+            // 3. Mass: Randomize between 10^-6 and 10^-4 Solar Masses
+            double logMass = -6.0 + (((double)std::rand() / RAND_MAX) * 2.0);
+            b.setMass(std::pow(10.0, logMass));
+            
+            // 4. Radius: Use the exact same formula you use in your Sidebar Creator!
+            double calculatedRadius = 0.02 + 0.005 * (logMass + 8.0); //
+            b.setRadius(calculatedRadius);
+            
+            m_bodies.push_back(b);
+        }
     } else if (presetID == 2) {
         // PRESET: Random Stable Disk
         generateProPlanetaryDisk(numBodies, Vec2(0,0), Vec2(0,0), true);
@@ -530,7 +565,7 @@ void Simulation::resolveCollision(Body& b1, Body& b2, double restitution) {
     double radiusSum = b1.getRadius() + b2.getRadius();
 
     // Check if they are overlapping
-    if (distSq >= radiusSum * radiusSum || distSq == 0.0) return; 
+    if (distSq >= radiusSum * radiusSum || distSq == 0.0) return;
 
     double dist = std::sqrt(distSq);
     Vec2 normal = delta / dist;
@@ -542,18 +577,18 @@ void Simulation::resolveCollision(Body& b1, Body& b2, double restitution) {
     double overlap = radiusSum - dist;
     
     if (overlap > ALLOWED_PENETRATION) {
-        double totalMass = b1.getMass() + b2.getMass();
-        double m1Ratio = b2.getMass() / totalMass;
-        double m2Ratio = b1.getMass() / totalMass;
+        double totalMass = b1.getMass() + b2.getMass(); 
+        double m1Ratio = b2.getMass() / totalMass; 
+        double m2Ratio = b1.getMass() / totalMass; 
 
         // Multiply the correction by our new percentage
-        b1.setPos(b1.getPos() + normal * (overlap * m1Ratio * POSITIONAL_PERCENT));
-        b2.setPos(b2.getPos() - normal * (overlap * m2Ratio * POSITIONAL_PERCENT));
+        b1.setPos(b1.getPos() + normal * (overlap * m1Ratio * POSITIONAL_PERCENT)); 
+        b2.setPos(b2.getPos() - normal * (overlap * m2Ratio * POSITIONAL_PERCENT)); 
     }
 
     // 2. Velocity Resolution (Normal Impulse)
-    Vec2 relVel = b1.getVel() - b2.getVel();
-    double velAlongNormal = relVel.dot(normal);
+    Vec2 relVel = b1.getVel() - b2.getVel(); 
+    double velAlongNormal = relVel.dot(normal); 
 
     // If velocities are separating, don't resolve
     if (velAlongNormal > 0) return; 
@@ -567,42 +602,42 @@ void Simulation::resolveCollision(Body& b1, Body& b2, double restitution) {
         actualRestitution = 0.0; // Force a dead stop
     }
 
-    double j = -(1.0 + actualRestitution) * velAlongNormal;
-    j /= (1.0 / b1.getMass() + 1.0 / b2.getMass());
+    double j = -(1.0 + actualRestitution) * velAlongNormal; 
+    j /= (1.0 / b1.getMass() + 1.0 / b2.getMass()); 
 
-    Vec2 normalImpulse = normal * j;
+    Vec2 normalImpulse = normal * j; 
     
-    b1.setVel(b1.getVel() + normalImpulse / b1.getMass());
-    b2.setVel(b2.getVel() - normalImpulse / b2.getMass());
+    b1.setVel(b1.getVel() + normalImpulse / b1.getMass()); 
+    b2.setVel(b2.getVel() - normalImpulse / b2.getMass()); 
 
     // 3. Friction (Tangential Impulse)
     // In 2D, the tangent is perpendicular to the normal. If normal is (x, y), tangent is (-y, x).
-    Vec2 tangent(-normal.getY(), normal.getX());
+    Vec2 tangent(-normal.getY(), normal.getX()); 
     
     // Recalculate relative velocity after the normal impulse was applied
-    Vec2 newRelVel = b1.getVel() - b2.getVel();
-    double velAlongTangent = newRelVel.dot(tangent);
+    Vec2 newRelVel = b1.getVel() - b2.getVel(); 
+    double velAlongTangent = newRelVel.dot(tangent); 
     
     // Calculate the tangential impulse scalar
-    double jt = -velAlongTangent;
-    jt /= (1.0 / b1.getMass() + 1.0 / b2.getMass());
+    double jt = -velAlongTangent; 
+    jt /= (1.0 / b1.getMass() + 1.0 / b2.getMass()); 
     
     // Coulomb friction law: friction is proportional to the normal force (impulse)
     const double FRICTION_COEFFICIENT = 0.5; // 0.0 = ice, 1.0+ = very sticky
-    double maxFriction = std::abs(j) * FRICTION_COEFFICIENT;
+    double maxFriction = std::abs(j) * FRICTION_COEFFICIENT; 
     
     // Clamp the tangential impulse so it doesn't exceed static friction
     if (jt > maxFriction) {
-        jt = maxFriction;
+        jt = maxFriction; 
     } else if (jt < -maxFriction) {
-        jt = -maxFriction;
+        jt = -maxFriction; 
     }
     
-    Vec2 frictionImpulse = tangent * jt;
+    Vec2 frictionImpulse = tangent * jt; 
     
     // Apply friction impulse
-    b1.setVel(b1.getVel() + frictionImpulse / b1.getMass());
-    b2.setVel(b2.getVel() - frictionImpulse / b2.getMass());
+    b1.setVel(b1.getVel() + frictionImpulse / b1.getMass()); 
+    b2.setVel(b2.getVel() - frictionImpulse / b2.getMass()); 
 }
 
 double Simulation::calculateTotalEnergy() const {
