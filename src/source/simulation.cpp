@@ -25,44 +25,48 @@ void Simulation::update(years_t deltaT)
 {
     if (m_bodies.empty()) return;
 
-    // Track total simulation time and time since we last logged
-    m_totalTime += deltaT.count();
-    m_timeSinceLastLog += deltaT.count();
+    // ENERGY LOGGING
 
-    // Log the energy if we've passed the threshold
-    if (m_timeSinceLastLog >= LOG_INTERVAL) {
-        if (m_energyLog.is_open()) {
-            m_energyLog << m_totalTime << "," << calculateTotalEnergy() << "," << m_totalHeatEnergy << "\n";
-            std::system("cls");
-            std::cout << m_totalTime << std::endl;
-        }
-        m_timeSinceLastLog = 0.0; // Reset the timer
-    }
+    // // Track total simulation time and time since we last logged
+    // m_totalTime += deltaT.count();
+    // m_timeSinceLastLog += deltaT.count();
+
+    // // Log the energy if we've passed the threshold
+    // if (m_timeSinceLastLog >= LOG_INTERVAL) {
+    //     if (m_energyLog.is_open()) {
+    //         m_energyLog << m_totalTime << "," << calculateTotalEnergy() << "," << m_totalHeatEnergy << "\n";
+    //         std::system("cls");
+    //         std::cout << m_totalTime << std::endl;
+    //     }
+    //     m_timeSinceLastLog = 0.0; // Reset the timer
+    // }
+
+    // ENERGY LOGGING
 
     // Leapfrog (kick-drift-kick) integrator with Barnes-Hut force calculation
     years_t half_dt = deltaT / 2.0;
 
-    // 1. Kick: update velocity by half-step using current acceleration
+    // Kick: update velocity by half-step using current acceleration
     for (auto& body : m_bodies) {
         body.kick(half_dt);
     }
 
-    // 2. Drift: update position by full-step using new velocity
+    // Drift: update position by full-step using new velocity
     for (auto& body : m_bodies) {
         body.drift(deltaT);
     }
 
-    double preCollisionEnergy = calculateTotalEnergy();
+    //double preCollisionEnergy = calculateTotalEnergy();
 
     handleCollisions(); //
 
-    // ---> NEW: Snapshot global energy AFTER collisions
-    double postCollisionEnergy = calculateTotalEnergy();
+    // Snapshot global energy AFTER collisions
+    //double postCollisionEnergy = calculateTotalEnergy();
 
     // Track the absolute exact energy converted into Heat / Work
-    m_totalHeatEnergy += (preCollisionEnergy - postCollisionEnergy);
+    //m_totalHeatEnergy += (preCollisionEnergy - postCollisionEnergy);
 
-    // 3. Build Barnes-Hut quadtree and compute accelerations
+    // Build Barnes-Hut quadtree and compute accelerations
     
     // Create quad containing all bodies
     Quad boundingQuad = Quad::newContaining(m_bodies);
@@ -98,7 +102,7 @@ void Simulation::update(years_t deltaT)
     // Wait for all tasks to complete
     m_threadPool.wait();
 
-    // 4. Kick: update velocity by another half-step using new acceleration
+    // Kick: update velocity by another half-step using new acceleration
     for (auto& body : m_bodies) {
         body.kick(half_dt);
     }
@@ -235,11 +239,11 @@ void Simulation::saveSimulation(const std::string& filename)
         return;
     }
 
-    // 1. Write the number of bodies (size_t) header
+    // Write the number of bodies (size_t) header
     size_t count = m_bodies.size();
     file.write(reinterpret_cast<const char*>(&count), sizeof(size_t));
 
-    // 2. Write the entire vector data block directly
+    // Write the entire vector data block directly
     // This assumes Body contains no pointers or std::string
     if (count > 0) {
         file.write(reinterpret_cast<const char*>(m_bodies.data()), count * sizeof(Body));
@@ -258,16 +262,16 @@ void Simulation::loadSimulation(const std::string& filename)
 
     reset(); // Clear current simulation
 
-    // 1. Read the header (number of bodies)
+    // Read the header (number of bodies)
     size_t count = 0;
     file.read(reinterpret_cast<char*>(&count), sizeof(size_t));
 
     if (count > 0) {
-        // 2. Resize vector to allocate the exact memory needed
+        // Resize vector to allocate the exact memory needed
         // This requires Body to have a default constructor (which your code implies it does)
         m_bodies.resize(count);
 
-        // 3. Read the data block directly into the vector's memory
+        // Read the data block directly into the vector's memory
         file.read(reinterpret_cast<char*>(m_bodies.data()), count * sizeof(Body));
     }
 
@@ -282,23 +286,23 @@ void Simulation::loadPreset(int presetID, int numBodies)
 {
     // ENERGY LOGGING
 
-    // Close existing log if one is running
-    if (m_energyLog.is_open()) {
-        m_energyLog.close();
-    }
+    // // Close existing log if one is running
+    // if (m_energyLog.is_open()) {
+    //     m_energyLog.close();
+    // }
     
-    // Reset timers for the new scenario
-    m_totalTime = 0.0;
-    m_timeSinceLastLog = 0.0;
-    m_totalHeatEnergy = 0.0;
+    // // Reset timers for the new scenario
+    // m_totalTime = 0.0;
+    // m_timeSinceLastLog = 0.0;
+    // m_totalHeatEnergy = 0.0;
 
-    // Create a unique file for this preset
-    std::string filename = "energy_log_preset_PRES" + std::to_string(presetID) + "BOD#" + std::to_string(numBodies) + ".csv";
-    //std::string filename = "earth_stress_test_LF.csv";
-    m_energyLog.open(filename);
-    if (m_energyLog.is_open()) {
-        m_energyLog << "Time,TotalEnergy,HeatEnergy\n";
-    }
+    // // Create a unique file for this preset
+    // std::string filename = "energy_log_preset_PRES" + std::to_string(presetID) + "BOD#" + std::to_string(numBodies) + ".csv";
+    // //std::string filename = "earth_stress_test_LF.csv";
+    // m_energyLog.open(filename);
+    // if (m_energyLog.is_open()) {
+    //     m_energyLog << "Time,TotalEnergy,HeatEnergy\n";
+    // }
 
     // ENERGY LOGGING
 
@@ -339,30 +343,32 @@ void Simulation::loadPreset(int presetID, int numBodies)
         // generateProPlanetaryDisk(numBodies / 2, Vec2(-10, 0), Vec2(0, 1.49), true);
         // generateProPlanetaryDisk(numBodies / 2 , Vec2(10, 0), Vec2(0, -1.49), true);
 
-        int count = (numBodies > 0) ? numBodies : 50; 
+
+        // This code is for testing energy loss
+        // int count = (numBodies > 0) ? numBodies : 50; 
         
-        for (int i = 0; i < count; ++i) {
-            Body b;
+        // for (int i = 0; i < count; ++i) {
+        //     Body b;
             
-            // 1. Position: Randomly scatter them within a tight 2.0 AU circle
-            double angle = ((double)std::rand() / RAND_MAX) * 2.0 * M_PI;
-            double distance = ((double)std::rand() / RAND_MAX) * 2.0; 
+        //     // Position: Randomly scatter them within a tight 2.0 AU circle
+        //     double angle = ((double)std::rand() / RAND_MAX) * 2.0 * M_PI;
+        //     double distance = ((double)std::rand() / RAND_MAX) * 2.0; 
             
-            b.setPos(Vec2(distance * std::cos(angle), distance * std::sin(angle)));
+        //     b.setPos(Vec2(distance * std::cos(angle), distance * std::sin(angle)));
             
-            // 2. Velocity: Zero. Let gravity do all the work to pull them into a pileup.
-            b.setVel(Vec2(0.0, 0.0));
+        //     // Velocity: Zero. Let gravity do all the work to pull them into a pileup.
+        //     b.setVel(Vec2(0.0, 0.0));
             
-            // 3. Mass: Randomize between 10^-6 and 10^-4 Solar Masses
-            double logMass = -6.0 + (((double)std::rand() / RAND_MAX) * 2.0);
-            b.setMass(std::pow(10.0, logMass));
+        //     // Mass: Randomize between 10^-6 and 10^-4 Solar Masses
+        //     double logMass = -6.0 + (((double)std::rand() / RAND_MAX) * 2.0);
+        //     b.setMass(std::pow(10.0, logMass));
             
-            // 4. Radius: Use the exact same formula you use in your Sidebar Creator!
-            double calculatedRadius = 0.02 + 0.005 * (logMass + 8.0); //
-            b.setRadius(calculatedRadius);
+        //     // Radius: Use the exact same formula you use in your Sidebar Creator!
+        //     double calculatedRadius = 0.02 + 0.005 * (logMass + 8.0); //
+        //     b.setRadius(calculatedRadius);
             
-            m_bodies.push_back(b);
-        }
+        //     m_bodies.push_back(b);
+        // }
     } else if (presetID == 2) {
         // PRESET: Random Stable Disk
         generateProPlanetaryDisk(numBodies, Vec2(0,0), Vec2(0,0), true);
@@ -513,7 +519,7 @@ void Simulation::handleCollisions() {
     // Fast clear the head array (compiles down to an ultra-fast memset)
     std::fill(m_hashHead.begin(), m_hashHead.begin() + tableSize, -1);
 
-    // 1. Hash Pass: Assign bodies to grid cells - O(N)
+    // Hash Pass: Assign bodies to grid cells - O(N)
     for (size_t i = 0; i < n; ++i) {
         int64_t cx = static_cast<int64_t>(std::floor(m_bodies[i].getPos().getX() / CELL_SIZE));
         int64_t cy = static_cast<int64_t>(std::floor(m_bodies[i].getPos().getY() / CELL_SIZE));
@@ -526,7 +532,7 @@ void Simulation::handleCollisions() {
         m_hashHead[hash] = static_cast<int>(i);
     }
 
-    // 2. Resolve Pass: Check neighbor cells - O(N)
+    // Resolve Pass: Check neighbor cells - O(N)
     // We only check Self, Right, Bottom-Right, Bottom, Bottom-Left to avoid duplicate checks
     const int neighborOffsets[5][2] = {{0, 0}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}};
 
@@ -570,9 +576,9 @@ void Simulation::resolveCollision(Body& b1, Body& b2, double restitution) {
     double dist = std::sqrt(distSq);
     Vec2 normal = delta / dist;
 
-    // 1. Positional Correction (with "slop" and relaxation)
+    // Positional Correction (with "slop" and relaxation)
     const double ALLOWED_PENETRATION = 0.01; 
-    const double POSITIONAL_PERCENT = 0.8; // NEW: Only resolve 80% of the overlap
+    const double POSITIONAL_PERCENT = 0.8;
     
     double overlap = radiusSum - dist;
     
@@ -586,14 +592,14 @@ void Simulation::resolveCollision(Body& b1, Body& b2, double restitution) {
         b2.setPos(b2.getPos() - normal * (overlap * m2Ratio * POSITIONAL_PERCENT)); 
     }
 
-    // 2. Velocity Resolution (Normal Impulse)
+    // Velocity Resolution (Normal Impulse)
     Vec2 relVel = b1.getVel() - b2.getVel(); 
     double velAlongNormal = relVel.dot(normal); 
 
     // If velocities are separating, don't resolve
     if (velAlongNormal > 0) return; 
 
-    // INCREASED: A higher threshold aggressively kills kinetic energy 
+    // A higher threshold aggressively kills kinetic energy 
     // for objects caught in strong gravity wells.
     const double RESTING_THRESHOLD = 1.0; 
     
@@ -610,7 +616,7 @@ void Simulation::resolveCollision(Body& b1, Body& b2, double restitution) {
     b1.setVel(b1.getVel() + normalImpulse / b1.getMass()); 
     b2.setVel(b2.getVel() - normalImpulse / b2.getMass()); 
 
-    // 3. Friction (Tangential Impulse)
+    // Friction (Tangential Impulse)
     // In 2D, the tangent is perpendicular to the normal. If normal is (x, y), tangent is (-y, x).
     Vec2 tangent(-normal.getY(), normal.getX()); 
     
