@@ -340,8 +340,8 @@ void Simulation::loadPreset(int presetID, int numBodies)
 
     } else if (presetID == 1) {
         // PRESET: Protoplanetary Collision
-        // generateProPlanetaryDisk(numBodies / 2, Vec2(-10, 0), Vec2(0, 1.49), true);
-        // generateProPlanetaryDisk(numBodies / 2 , Vec2(10, 0), Vec2(0, -1.49), true);
+        generateProPlanetaryDisk(numBodies / 2, Vec2(-10, 0), Vec2(0, 1.49), true);
+        generateProPlanetaryDisk(numBodies / 2 , Vec2(10, 0), Vec2(0, -1.49), true);
 
 
         // This code is for testing energy loss
