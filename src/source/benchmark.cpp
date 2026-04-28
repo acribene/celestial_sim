@@ -9,14 +9,17 @@ void benchmark::runHeadlessBenchmark(int numBodies, double theta, int totalTicks
     std::cout << "[BENCHMARK] Testing N=" << numBodies << " | Theta=" << theta << "...\n";
 
     Simulation sim(theta);
-    sim.loadPreset(2, numBodies); // 2 = Random Stable Disk
+    
+    // Load the pre-generated master state specific to this N
+    std::string filename = "master_benchmark_N_" + std::to_string(numBodies) + ".sim";
+    sim.loadSimulation(filename); 
     
     double initialEnergy = sim.calculateTotalEnergy();
 
     auto start = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < totalTicks; i++) {
-        sim.update(fixedDeltaT, true);
+        sim.update(fixedDeltaT, true); 
     }
 
     auto end = std::chrono::high_resolution_clock::now();
@@ -35,32 +38,41 @@ void benchmark::runHeadlessBenchmark(int numBodies, double theta, int totalTicks
 void benchmark::runAllBenchmarks() {
     std::cout << "=== STARTING SCALABILITY BENCHMARKS ===\n";
     
+    int ticksToRun = 500;
+    years_t fixedDeltaT(TIME_STEP); 
+
+    std::vector<int> testBodyCounts = {100, 500, 1000, 2500, 5000, 10000};
+    
+    std::vector<double> testThetas = {0.0, 0.5, 1.0, 1.5}; 
+
+    std::cout << "\n--- Phase 1: Generating Master States ---\n";
+    for (int n : testBodyCounts) {
+        std::string filename = "master_benchmark_N_" + std::to_string(n) + ".sim";
+        std::cout << "Generating " << filename << "...\n";
+        
+        Simulation masterSim(0.0); 
+        masterSim.loadPreset(2, n);
+        masterSim.saveSimulation(filename);
+    }
+
+    // --- PHASE 2: RUN BENCHMARKS ---
+    std::cout << "\n--- Phase 2: Executing Benchmark Loops ---\n";
+    
     std::ofstream csv("scalability_curve_results_WITHCOLLISIONS.csv");
     if (!csv.is_open()) {
-        std::cerr << "Failed to open scalability_curve_results.csv for writing!\n";
+        std::cerr << "Failed to open CSV for writing!\n";
         return;
     }
 
     csv << "N,Theta,AvgTimeMs,InitialTotalEnergy,FinalTotalEnergy\n";
 
-    // Standardize the test conditions
-    int ticksToRun = 500;
-    
-    // Construct the years_t duration using your constant
-    years_t fixedDeltaT(TIME_STEP); 
-
-    // The body counts we want to test to show the curve
-    std::vector<int> testBodyCounts = {100, 500, 1000, 2500, 5000, 10000};
-    
-    // The thetas we want to test: 0.0 (O(N^2) baseline) to 1.5 barnes hut)
-    std::vector<double> testThetas = {0.0, 0.5, 1.0, 1.5};
-
-    // Run the nested loops for the Scalability Curve
     for (double theta : testThetas) {
         std::cout << "\n--- Running series for Theta = " << theta << " ---\n";
         for (int n : testBodyCounts) {
+            
+            // Safety valve to prevent O(N^2) lockups on massive clusters
             if (theta == 0.0 && n > 5000) {
-                std::cout << "[BENCHMARK] Skipping N=" << n << " for Theta=" << theta << " to save time.\n";
+                std::cout << "[BENCHMARK] Skipping N=" << n << " for Theta=0.0 to save time.\n";
                 continue;
             }
             runHeadlessBenchmark(n, theta, ticksToRun, fixedDeltaT, csv);
@@ -69,5 +81,4 @@ void benchmark::runAllBenchmarks() {
 
     csv.close();
     std::cout << "\n=== BENCHMARKS COMPLETE ===\n";
-    std::cout << "Results saved to scalability_curve_results.csv\n";
 }
