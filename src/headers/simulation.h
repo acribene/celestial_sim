@@ -52,7 +52,7 @@ class Simulation
     double calculateTotalEnergy() const;
 
     // General Physics
-    void update(years_t deltaT);
+    void update(years_t deltaT, bool enableCollisions = true);
     Body* addBody(Body body);
     void render();
     void reset();

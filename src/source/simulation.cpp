@@ -21,7 +21,9 @@ Simulation::Simulation(double theta)
 }
 
 // LEAPFROG
-void Simulation::update(years_t deltaT)
+// Takes the deltaT and the boolean flag that defaults to true to enable
+// collisions.
+void Simulation::update(years_t deltaT, bool enableCollisions)
 {
     if (m_bodies.empty()) return;
 
@@ -58,7 +60,7 @@ void Simulation::update(years_t deltaT)
 
     //double preCollisionEnergy = calculateTotalEnergy();
 
-    handleCollisions(); //
+    if(enableCollisions) { handleCollisions(); } // only do collsions when specified
 
     // Snapshot global energy AFTER collisions
     //double postCollisionEnergy = calculateTotalEnergy();
@@ -649,7 +651,7 @@ void Simulation::resolveCollision(Body& b1, Body& b2, double restitution) {
 double Simulation::calculateTotalEnergy() const {
     double kineticEnergy = 0.0;
     double potentialEnergy = 0.0;
-    size_t n = m_bodies.size();
+    int n = m_bodies.size();
 
     // 1. Calculate Total Kinetic Energy
     for (const auto& body : m_bodies) {
@@ -658,8 +660,8 @@ double Simulation::calculateTotalEnergy() const {
     }
 
     // 2. Calculate Total Potential Energy 
-    for (size_t i = 0; i < n; ++i) {
-        for (size_t j = i + 1; j < n; ++j) {
+    for (int i = 0; i < n; ++i) {
+        for (int j = i + 1; j < n; ++j) {
             Vec2 delta = m_bodies[i].getPos() - m_bodies[j].getPos();
             double dist = std::sqrt(delta.magSqrd() + SOFTENING); 
             potentialEnergy -= (GC * m_bodies[i].getMass() * m_bodies[j].getMass()) / dist;
