@@ -4,7 +4,7 @@
 
 int main() {
 
-    bool run_benchmarks = true;
+    bool run_benchmarks = false;
     if(run_benchmarks)
     {
         benchmark::runAllBenchmarks();

@@ -19,9 +19,8 @@ void Body::drift(years_t dt) {
 
 void Body::draw() const
 {
-    // Convert AU to pixels for rendering
-    double screenX = WINDOW_WIDTH / 2.0 + m_position.getX() * SCALE;
-    double screenY = WINDOW_HEIGHT / 2.0 + m_position.getY() * SCALE;
+    double screenX = GetScreenWidth() / 2.0 + m_position.getX() * SCALE;
+    double screenY = GetScreenHeight() / 2.0 + m_position.getY() * SCALE;
     double screenRadius = m_radius * SCALE;
     
     if (screenRadius < 3.0) {
@@ -30,7 +29,6 @@ void Body::draw() const
     
     // Draw the celestial body
     DrawCircle(screenX, screenY, screenRadius, m_color);
-    //DrawCircle(screenX, screenY, screenRadius, WHITE);
 }
 
 // Generic setters and getters

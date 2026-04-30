@@ -10,6 +10,11 @@ CameraController::CameraController(int screenWidth, int screenHeight)
 }
 
 void CameraController::update() {
+
+    if (IsWindowResized()) {
+        camera_.offset = { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };
+    }
+    
     // Camera controls
     if (IsKeyDown(KEY_RIGHT)) camera_.target.x += panSpeed_ / camera_.zoom;
     if (IsKeyDown(KEY_LEFT)) camera_.target.x -= panSpeed_ / camera_.zoom;

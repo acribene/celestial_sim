@@ -53,8 +53,10 @@ void InputHandler::handleSelection(Sidebar &sidebar, Simulation &sim, const Came
         // 1. Convert Screen Space -> World Space
         Vector2 mouseScreen = GetMousePosition();
         Vector2 mouseWorld = GetScreenToWorld2D(mouseScreen, camera);
-        double halfWidth = WINDOW_WIDTH / 2.0;
-        double halfHeight = WINDOW_HEIGHT / 2.0;
+        
+        // --- FIX: Use dynamic screen dimensions ---
+        double halfWidth = GetScreenWidth() / 2.0;
+        double halfHeight = GetScreenHeight() / 2.0;
 
         // Reverse the offset (subtract center)
         double tempX = mouseWorld.x - halfWidth;

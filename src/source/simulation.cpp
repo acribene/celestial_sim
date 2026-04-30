@@ -475,9 +475,8 @@ void Simulation::DeleteBodyAt(Vec2 worldPos) {
 
 Body *Simulation::getBodyAt(Vec2 worldPos)
 {
-    // Setup the same constants used in Body::draw
-    double halfWidth = WINDOW_WIDTH / 2.0;
-    double halfHeight = WINDOW_HEIGHT / 2.0;
+    double halfWidth = GetScreenWidth() / 2.0;
+    double halfHeight = GetScreenHeight() / 2.0;
 
     for( auto body = m_bodies.rbegin(); body != m_bodies.rend(); ++body ) {
         
@@ -491,7 +490,6 @@ Body *Simulation::getBodyAt(Vec2 worldPos)
         double distSq = dx*dx + dy*dy;
         
         // Calculate Visual Radius (including the minimum 3.0 pixel clamp)
-        // If we don't do this, small planets (radius < 1 pixel) will be unclickable
         double visualRadius = body->getRadius() * SCALE;
         if (visualRadius < 3.0) {
             visualRadius = 3.0;

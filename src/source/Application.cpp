@@ -7,6 +7,7 @@ Application::Application(int width, int height) : isRunning_(false), cameraContr
 }
 
 void Application::initialize() {
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "2D Physics Simulator");
     SetTargetFPS(60);
     
@@ -59,6 +60,10 @@ void Application::shutdown()
 
 void Application::processInput()
 {
+    if (IsKeyPressed(KEY_F11)) {
+        ToggleFullscreen();
+    }
+    
     if(!sidebar_.isEditing())
     {
         InputHandler::handleTimeScaleInput(timeManager_);
