@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <cstdlib>
+#include <algorithm>
 
 // Default ctor sets bodies to stl vector default and puts timescale at 1 (real time)
 // Initialize quadtree with theta (default 0.5) and epsilon from constants
@@ -27,63 +28,34 @@ void Simulation::update(years_t deltaT, bool enableCollisions)
 {
     if (m_bodies.empty()) return;
 
-    // ENERGY LOGGING
+    //using namespace std::chrono;
 
-    // // Track total simulation time and time since we last logged
-    // m_totalTime += deltaT.count();
-    // m_timeSinceLastLog += deltaT.count();
-
-    // // Log the energy if we've passed the threshold
-    // if (m_timeSinceLastLog >= LOG_INTERVAL) {
-    //     if (m_energyLog.is_open()) {
-    //         m_energyLog << m_totalTime << "," << calculateTotalEnergy() << "," << m_totalHeatEnergy << "\n";
-    //         std::system("cls");
-    //         std::cout << m_totalTime << std::endl;
-    //     }
-    //     m_timeSinceLastLog = 0.0; // Reset the timer
-    // }
-
-    // ENERGY LOGGING
-
-    // Leapfrog (kick-drift-kick) integrator with Barnes-Hut force calculation
+    // 1. Leapfrog Kick & Drift
     years_t half_dt = deltaT / 2.0;
+    for (auto& body : m_bodies) body.kick(half_dt);
+    for (auto& body : m_bodies) body.drift(deltaT);
 
-    // Kick: update velocity by half-step using current acceleration
-    for (auto& body : m_bodies) {
-        body.kick(half_dt);
-    }
+    // 2. Handle Collisions
+    //auto start_coll = high_resolution_clock::now();
+    if(enableCollisions) { handleCollisions(); } 
+    //auto end_coll = high_resolution_clock::now();
+    //m_lastCollisionTimeMs = duration<double, std::milli>(end_coll - start_coll).count();
 
-    // Drift: update position by full-step using new velocity
-    for (auto& body : m_bodies) {
-        body.drift(deltaT);
-    }
-
-    //double preCollisionEnergy = calculateTotalEnergy();
-
-    if(enableCollisions) { handleCollisions(); } // only do collsions when specified
-
-    // Snapshot global energy AFTER collisions
-    //double postCollisionEnergy = calculateTotalEnergy();
-
-    // Track the absolute exact energy converted into Heat / Work
-    //m_totalHeatEnergy += (preCollisionEnergy - postCollisionEnergy);
-
-    // Build Barnes-Hut quadtree and compute accelerations
-    
-    // Create quad containing all bodies
+    // 3. Quadtree Build (Serial)
+    //auto start_tree = high_resolution_clock::now();
     Quad boundingQuad = Quad::newContaining(m_bodies);
     m_quadtree.reserve(m_bodies.size());
     m_quadtree.clear(boundingQuad);
     
-    // Insert all bodies into quadtree
     for (const auto& body : m_bodies) {
         m_quadtree.insert(body.getPos(), body.getMass());
     }
-    
-    // Propagate mass and center of mass up the tree
     m_quadtree.propagate();
+    //auto end_tree = high_resolution_clock::now();
+    //m_lastTreeTimeMs = duration<double, std::milli>(end_tree - start_tree).count();
     
-    // Calculate accelerations using quadtree with thread pool
+    // 4. Barnes-Hut Force Calculation (Multithreaded)
+    //auto start_force = high_resolution_clock::now();
     size_t bodiesPerThread = (m_bodies.size() + m_threadCount - 1) / m_threadCount;
     
     for (size_t t = 0; t < m_threadCount; ++t) {
@@ -100,11 +72,11 @@ void Simulation::update(years_t deltaT, bool enableCollisions)
             }
         });
     }
-    
-    // Wait for all tasks to complete
     m_threadPool.wait();
+    // auto end_force = high_resolution_clock::now();
+    //m_lastForceCalcTimeMs = duration<double, std::milli>(end_force - start_force).count();
 
-    // Kick: update velocity by another half-step using new acceleration
+    // 5. Leapfrog Kick
     for (auto& body : m_bodies) {
         body.kick(half_dt);
     }
@@ -507,60 +479,46 @@ void Simulation::handleCollisions() {
     size_t n = m_bodies.size();
     if (n < 2) return;
 
-    const double CELL_SIZE = 0.2; 
-    
-    // Keep the hash table roughly 2x the body count to minimize hash collisions
-    size_t tableSize = n * 2; 
+    // 1. Structure to hold AABB (Axis-Aligned Bounding Box) data
+    struct Bound {
+        size_t id;
+        double minX;
+        double maxX;
+        double minY;
+        double maxY;
+    };
 
-    // Resize our persistent buffers only if needed (rarely allocates after frame 1)
-    if (m_hashHead.size() < tableSize) m_hashHead.resize(tableSize);
-    if (m_hashNext.size() < n) m_hashNext.resize(n);
-
-    // Fast clear the head array (compiles down to an ultra-fast memset)
-    std::fill(m_hashHead.begin(), m_hashHead.begin() + tableSize, -1);
-
-    // Hash Pass: Assign bodies to grid cells - O(N)
+    // We can make this a class member (std::vector<Bound> m_bounds) 
+    // in the future to avoid reallocation, but a local vector is fine for now
+    std::vector<Bound> bounds(n);
     for (size_t i = 0; i < n; ++i) {
-        int64_t cx = static_cast<int64_t>(std::floor(m_bodies[i].getPos().getX() / CELL_SIZE));
-        int64_t cy = static_cast<int64_t>(std::floor(m_bodies[i].getPos().getY() / CELL_SIZE));
-        
-        // Fast prime-multiplication hash
-        uint32_t hash = (static_cast<uint32_t>(cx) * 73856093 ^ static_cast<uint32_t>(cy) * 19349663) % tableSize;
-
-        // Insert into the linked list for this hash bucket
-        m_hashNext[i] = m_hashHead[hash];
-        m_hashHead[hash] = static_cast<int>(i);
+        double r = m_bodies[i].getRadius();
+        Vec2 pos = m_bodies[i].getPos();
+        bounds[i] = {i, pos.getX() - r, pos.getX() + r, pos.getY() - r, pos.getY() + r};
     }
 
-    // Resolve Pass: Check neighbor cells - O(N)
-    // We only check Self, Right, Bottom-Right, Bottom, Bottom-Left to avoid duplicate checks
-    const int neighborOffsets[5][2] = {{0, 0}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}};
+    // 2. Sort bodies by their left-most X edge
+    std::sort(bounds.begin(), bounds.end(), [](const Bound& a, const Bound& b) {
+        return a.minX < b.minX;
+    });
 
+    // 3. Sweep and Prune (1D Axis Sweep)
     for (size_t i = 0; i < n; ++i) {
-        int64_t cx = static_cast<int64_t>(std::floor(m_bodies[i].getPos().getX() / CELL_SIZE));
-        int64_t cy = static_cast<int64_t>(std::floor(m_bodies[i].getPos().getY() / CELL_SIZE));
-
-        for (int offset = 0; offset < 5; ++offset) {
-            int64_t nx = cx + neighborOffsets[offset][0];
-            int64_t ny = cy + neighborOffsets[offset][1];
+        for (size_t j = i + 1; j < n; ++j) {
             
-            uint32_t neighborHash = (static_cast<uint32_t>(nx) * 73856093 ^ static_cast<uint32_t>(ny) * 19349663) % tableSize;
-            
-            int j = m_hashHead[neighborHash];
-            while (j != -1) {
-                // Ensure the hash bucket actually corresponds to the correct spatial cell
-                int64_t jx = static_cast<int64_t>(std::floor(m_bodies[j].getPos().getX() / CELL_SIZE));
-                int64_t jy = static_cast<int64_t>(std::floor(m_bodies[j].getPos().getY() / CELL_SIZE));
-
-                if (jx == nx && jy == ny) {
-                    // Prevent duplicate checks. If checking the same cell (offset 0), only check j > i.
-                    if (offset != 0 || j > static_cast<int>(i)) {
-                        resolveCollision(m_bodies[i], m_bodies[j], 0.5);
-                    }
-                }
-                // Move to the next body in this bucket
-                j = m_hashNext[j];
+            // THE MAGIC: If the next body's left edge is further right than our right edge,
+            // NO further bodies in the sorted list can possibly intersect with us. Break early!
+            if (bounds[j].minX > bounds[i].maxX) {
+                break;
             }
+
+            // Quick Y-axis AABB check before doing expensive square roots
+            if (bounds[i].minY > bounds[j].maxY || bounds[i].maxY < bounds[j].minY) {
+                continue;
+            }
+
+            // Only perform the exact circle collision if the AABBs overlap
+            resolveCollision(m_bodies[bounds[i].id], m_bodies[bounds[j].id], 0.5);
         }
     }
 }

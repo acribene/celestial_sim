@@ -36,7 +36,15 @@ class Simulation
     // // 0.1 means it logs once every 0.1 simulated years.
     // const double LOG_INTERVAL = .1;
 
+    // double m_lastTreeTimeMs = 0.0;
+    // double m_lastForceCalcTimeMs = 0.0;
+    // double m_lastCollisionTimeMs = 0.0;
+    
     public:
+    // double getLastTreeBuildTimeMs() const { return m_lastTreeTimeMs; }
+    // double getLastForceCalcTimeMs() const { return m_lastForceCalcTimeMs; }
+    // double getLastCollisionTimeMs() const { return m_lastCollisionTimeMs; }
+
     Simulation( double theta = 0.5 );
     ~Simulation() = default;
 
