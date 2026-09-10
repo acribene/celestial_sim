@@ -18,3 +18,7 @@ A few reasons for choosing this project:
 This will be primarily for major changes or alterations with my original plan.
 
 - I decided to move away fro the 3D aspect and lean heavier onto simulating large numbers of bodies instead of simply 100.
+- I was able to successfully support my minimum required performance goals of ~100 bodies at 60 fps without collisions.
+- Implemented the first iteration of collisions
+- Refactored collisions to improved preformance
+- I can now comfortably support 500+ bodies with collisions enabled
